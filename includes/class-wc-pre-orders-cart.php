@@ -202,12 +202,13 @@ class WC_Pre_Orders_Cart {
         global $woo_multi;
         global $woo_objs;
 
-        add_option('woo_multi', array());
-        add_option('woo_objs', array())
+		$woo_multi = array();
+        //add_option('woo_multi', array());
+        add_option('woo_objs', array());
         //$woo_multi = get_option('woo_multi');
 
         $i = 0;
-        $j = 0;;
+        $j = 0;
 
 		$contains_pre_order = false;
 
@@ -220,13 +221,15 @@ class WC_Pre_Orders_Cart {
 					$contains_pre_order = true;
 
                     if ($i > 1) {
-                        update_option('woo_multi', array($i => $cart_item));
+                    	array_push($woo_multi, array($i => $cart_item ));
+                        //update_option('woo_multi', array($i => $cart_item));
                         //$woo_multi['items'][$i] = $cart_item;
                     }
 
 				}
 			}
 		}
+		var_dump($woo_multi);
         //echo $i . '-items';
 
         //var_dump(get_option('woo_multi'));

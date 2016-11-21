@@ -55,13 +55,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-// Required functions
-if ( ! function_exists( 'woothemes_queue_update' ) ) {
-	require_once( 'woo-includes/woo-functions.php' );
-}
-
-// Plugin updates
-woothemes_queue_update( plugin_basename( __FILE__ ), 'b2dc75e7d55e6f5bbfaccb59830f66b7', '178477' );
 
 // Check if WooCommerce is active and deactivate extension if it's not
 if ( ! is_woocommerce_active() ) {
@@ -141,6 +134,11 @@ class WC_Pre_Orders {
 
 		// Load translation files
 		add_action( 'init', array( $this, 'load_translation' ) );
+
+		//$_SESSION['hey'] = 'hey';
+
+
+		var_dump($_SESSION);
 
 		// Un-schedule events on plugin deactivation
 		register_deactivation_hook( __FILE__, array( $this, 'deactivate' ) );
