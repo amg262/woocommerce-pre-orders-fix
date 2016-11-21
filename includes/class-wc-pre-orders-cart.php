@@ -28,11 +28,6 @@ class WC_Pre_Orders_Cart {
 	 */
 	public function __construct() {
 
-	    global $woo_multi;
-        global $woo_objs;
-
-
-
 		// Remove other products from the cart when adding a pre-order
 		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_cart' ), 15, 2 );
 
@@ -110,7 +105,7 @@ class WC_Pre_Orders_Cart {
 	public function validate_cart( $valid, $product_id ) {
 		global $woocommerce;
 
-		/*if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $product_id ) ) {
+		if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $product_id ) ) {
 
 			// if a pre-order product is being added to cart, check if the cart already contains other products and empty it if it does
 			if( $woocommerce->cart->get_cart_contents_count() >= 1 ) {
@@ -144,11 +139,8 @@ class WC_Pre_Orders_Cart {
 
 				$valid = false;
 			}
-		}*/
+		}
 
-		$var = $this->cart_contains_pre_order();
-
-        //var_dump($var);
 		return $valid;
 	}
 
@@ -199,16 +191,6 @@ class WC_Pre_Orders_Cart {
 	 */
 	public static function cart_contains_pre_order() {
 		global $woocommerce;
-        global $woo_multi;
-        global $woo_objs;
-
-		$woo_multi = array();
-        //add_option('woo_multi', array());
-        add_option('woo_objs', array());
-        //$woo_multi = get_option('woo_multi');
-
-        $i = 0;
-        $j = 0;
 
 		$contains_pre_order = false;
 
@@ -217,23 +199,13 @@ class WC_Pre_Orders_Cart {
 			foreach ( $woocommerce->cart->cart_contents as $cart_item ) {
 
 				if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $cart_item['product_id'] ) ) {
-                    $i++;
+
 					$contains_pre_order = true;
-
-                    if ($i > 1) {
-                    	array_push($woo_multi, array($i => $cart_item ));
-                        //update_option('woo_multi', array($i => $cart_item));
-                        //$woo_multi['items'][$i] = $cart_item;
-                    }
-
+					break;
 				}
 			}
 		}
-		var_dump($woo_multi);
-        //echo $i . '-items';
 
-        //var_dump(get_option('woo_multi'));
-        //var_dump($woo_multi);
 		return $contains_pre_order;
 	}
 

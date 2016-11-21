@@ -28,13 +28,8 @@ class WC_Pre_Orders_Order  {
 	 * @return \WC_Pre_Orders_Order
 	 */
 	public function __construct() {
-        global $woo_multi;
-        global $woo_objs;
 
-
-
-        add_action( 'init', array( $this, 'register_order_status' ) );
-
+		add_action( 'init', array( $this, 'register_order_status' ) );
 
 		add_filter( 'wc_order_statuses', array( $this, 'order_statuses' ) );
 
@@ -105,35 +100,14 @@ class WC_Pre_Orders_Order  {
 	 * @return bool true if the order contains a pre-order, false otherwise
 	 */
 	public static function order_contains_pre_order( $order ) {
-        global $woo_multi;
-        $woo_multi = get_option('woo_multi');
 
-        if ($woo_multi !== null) {
-            $new_order = wc_create_order();
-
-            // $new_order->add_product($sess['product_id']); //(get_product with id and next is for quantity)
-            //$new_order->set_address( $address, 'billing' );
-            //$new_order->set_address( $address, 'shipping' );
-            //update_post_meta($new_order->id, '_customer_user', get_current_user_id() );
-            update_post_meta($new_order->id, '_wc_pre_orders_is_pre_order', 1);
-
-            update_option('woo_multi', null);
-        }
-        if ( ! is_object( $order ) ) {
-            $order = new WC_Order( $order );
-        }
-
+		if ( ! is_object( $order ) ) {
+			$order = new WC_Order( $order );
+		}
 
 		if ( ! isset ( $order->order_custom_fields ) ) {
 			$order->order_custom_fields = get_post_custom( $order->id );
 		}
-
-
-
-        // save when the pre-order amount was charged (either upfront or upon release)
-        //update_post_meta( $new_order->id, '_wc_pre_orders_when_charged', $product->wc_pre_orders_when_to_charge );
-
-      //  $new_order->update_status('pre-ordered');
 
 		if ( isset( $order->order_custom_fields['_wc_pre_orders_is_pre_order'][0] ) ) {
 			return (bool) $order->order_custom_fields['_wc_pre_orders_is_pre_order'][0];
