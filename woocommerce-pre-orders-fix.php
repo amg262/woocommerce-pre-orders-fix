@@ -3,7 +3,7 @@
  * Plugin Name: WooCommerce Pre-Orders Fix
  * Plugin URI: http://andrewmgunn.org/woocommerce-pre-orders-fix/
  * Description: Sell pre-orders for products in your WooCommerce store, multiple pre-order cart add-on.
- * Author: Andrew Gunn
+ * Author: Andrew Gunn ;dfdfd
  * Author URI: http://andrewgunn.org
  * Version: 1.0
  * Text Domain: woocommerce-pre-orders-fix
