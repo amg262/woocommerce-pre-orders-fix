@@ -204,7 +204,7 @@ class WC_Pre_Orders_Cart {
 
 		$woo_multi = array();
         //add_option('woo_multi', array());
-        add_option('woo_objs', array());
+        //add_option('woo_objs', array());
         //$woo_multi = get_option('woo_multi');
 
         $i = 0;
