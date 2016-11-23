@@ -31,7 +31,7 @@ class WC_Pre_Orders_Cron {
 		// Add custom schedule, the default interval for pre-order check is every 5 minutes
 		add_filter( 'cron_schedules', array( $this, 'add_custom_schedules' ) );
 
-		// Schedule a complete pre-order check event if it doesn't exist - activation hooks are unreliable, so attempt to schedule events on every page load
+		// Schedule a complete pre-order check event if it doesn't exist - activation hooks are unreliable, so attempt to schedule events on every 1		page load
 		add_action( 'init', array( $this, 'add_scheduled_events' ) );
 
 	}
