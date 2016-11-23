@@ -236,7 +236,7 @@ class WC_Pre_Orders_Cart {
 			}
 		}
 
-		print $_SESSION['cart_count'];
+		//print $_SESSION['cart_count'];
 
 		//var_dump(count($_SESSION['cart_items']));
         //echo $i . '-items';
