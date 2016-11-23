@@ -33,6 +33,7 @@ class WC_Pre_Orders_Cart {
 
 
 
+
 		// Remove other products from the cart when adding a pre-order
 		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_cart' ), 15, 2 );
 
@@ -46,7 +47,6 @@ class WC_Pre_Orders_Cart {
 		add_filter( 'woocommerce_get_item_data', array( $this, 'get_item_data' ), 10, 2 );
 
 	}
-
 
 	/**
 	 * Get the order total formatted to show when the order will be charged

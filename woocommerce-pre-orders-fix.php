@@ -121,6 +121,7 @@ class WC_Pre_Orders
         //include('woo_multi/woo_multi.php');
 
         // load classes that require WC to be loaded
+
         add_action( 'woocommerce_init', array( $this, 'init' ) );
 
         // add pre-order notification emails

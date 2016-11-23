@@ -35,6 +35,7 @@ class WC_Pre_Orders_Order  {
 
 		// automatically update the pre-order status when the order's status changes
 		add_action( 'woocommerce_order_status_changed', array( $this, 'auto_update_pre_order_status' ), 10, 3 );
+		add_action( 'woocommerce_order_status_changed', array( $this, 'fahhh' ), 10, 3 );
 
 		// automatically cancel a pre-order when it's parent order is trashed
 		add_action( 'wp_trash_post', array( $this, 'maybe_cancel_trashed_pre_order' ) );
@@ -44,6 +45,10 @@ class WC_Pre_Orders_Order  {
 
 		// adds a 'Release Date' line to pre-order product order items on the thank-you page, emails, my account, etc
 		add_filter( 'woocommerce_order_get_items', array( $this, 'add_product_release_date_item_meta' ), 10, 2 );
+	}
+
+	public function fahhh() {
+		var_dump($_SESSION);
 	}
 
 	/**
