@@ -6,8 +6,6 @@
  * Time: 3:04 AM
  */
 
-namespace WooPoFix;
-
 
 class WooPo {
 

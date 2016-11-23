@@ -20,6 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 class WC_Pre_Orders_Cart {
 
 
+	public $wpo;
 	/**
 	 * Add hooks / filters
 	 *
@@ -27,6 +28,9 @@ class WC_Pre_Orders_Cart {
 	 * @return \WC_Pre_Orders_Cart
 	 */
 	public function __construct() {
+
+		include_once ( 'class-woo-po.php' );
+		$this->wpo = new WooPo();
 
 		// Remove other products from the cart when adding a pre-order
 		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_cart' ), 15, 2 );
@@ -104,6 +108,21 @@ class WC_Pre_Orders_Cart {
 	 */
 	public function validate_cart( $valid, $product_id ) {
 		global $woocommerce;
+
+		if( $woocommerce->cart->get_cart_contents_count() >= 1 ) {
+
+
+			foreach ($woocommerce->cart->cart_contents as $cart_item) {
+
+				$product = $cart_item['product_id'];
+
+				if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $product ) ) {
+					$this->wpo->add_po_item($cart_item);
+				}
+
+			}
+
+		}
 
 		if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $product_id ) ) {
 
@@ -252,7 +271,7 @@ class WC_Pre_Orders_Cart {
 
 		} else {
 
-			// cart doesn't contain pre-order
+			// cart doesn't contain pre-order//
 			return null;
 		}
 	}
