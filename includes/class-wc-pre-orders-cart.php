@@ -110,6 +110,8 @@ class WC_Pre_Orders_Cart {
 	public function validate_cart( $valid, $product_id ) {
 		global $woocommerce;
 
+
+
 		/*if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $product_id ) ) {
 
 			// if a pre-order product is being added to cart, check if the cart already contains other products and empty it if it does
@@ -224,12 +226,19 @@ class WC_Pre_Orders_Cart {
                     	array_push($woo_multi, array($i => $cart_item ));
                         //update_option('woo_multi', array($i => $cart_item));
                         //$woo_multi['items'][$i] = $cart_item;
+	                    $_SESSION['cart_count'] = $i;
+	                    $_SESSION['cart_items'] = $woo_multi;
                     }
+
+
 
 				}
 			}
 		}
-		var_dump($woo_multi);
+
+		print $_SESSION['cart_count'];
+
+		//var_dump(count($_SESSION['cart_items']));
         //echo $i . '-items';
 
         //var_dump(get_option('woo_multi'));

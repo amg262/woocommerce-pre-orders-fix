@@ -138,9 +138,11 @@ class WC_Pre_Orders {
 		//$_SESSION['hey'] = 'hey';
 
 
-		var_dump($_SESSION);
+		//var_dump($_SESSION);
 
 		// Un-schedule events on plugin deactivation
+		//add_action('admin_init', array($this, 'activate'));
+		register_activation_hook( __FILE__, array( $this, 'activate' ) );
 		register_deactivation_hook( __FILE__, array( $this, 'deactivate' ) );
 	}
 
@@ -271,8 +273,26 @@ class WC_Pre_Orders {
 	 *
 	 * @since 1.0
 	 */
+	public function activate() {
+
+
+		flush_rewrite_rules();
+		// Remove scheduling function before removing scheduled hook, or else it will get re-added
+		if (is_plugin_active('woocommerce-pre-orders/woocommerce-pre-orders.php')) {
+			echo '<h1>Critical Error</h1>';
+			return;
+		}
+
+	}
+
+	/**
+	 * Remove terms and scheduled events on plugin deactivation
+	 *
+	 * @since 1.0
+	 */
 	public function deactivate() {
 
+		flush_rewrite_rules();
 		// Remove scheduling function before removing scheduled hook, or else it will get re-added
 		remove_action( 'init', array( $this->cron, 'add_scheduled_events') );
 
