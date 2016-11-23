@@ -1,9 +1,10 @@
 <?php
 /**
- * Plugin Name: WooCommerce Pre-Orders Fix2
+ *
+ * Plugin Name: WooCommerce Pre-Orders Fix
  * Plugin URI: http://andrewmgunn.org/woocommerce-pre-orders-fix/
  * Description: Sell pre-orders for products in your WooCommerce store, multiple pre-order cart add-on.
- * Author: Andrew Gunn ;dfdfd
+ * Author: Andrew Gunn
  * Author URI: http://andrewgunn.org
  * Version: 1.0
  * Text Domain: woocommerce-pre-orders-fix
@@ -20,47 +21,24 @@
  * @copyright Copyright (c) 2015, WooThemes
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0
  *
- *
- *
- * indicate the order contains a pre-order
-		update_post_meta( $order_id, '_wc_pre_orders_is_pre_order', 1 );
-
-		// save when the pre-order amount was charged (either upfront or upon release)
-		update_post_meta( $order_id, '_wc_pre_orders_when_charged', $product->wc_pre_orders_when_to_charge );
-
-			$order->update_status( 'pre-ordered' );
-			$order->order_custom_fields = get_post_custom( $order->id );
-
-
-			return (bool) $order->order_custom_fields['_wc_pre_orders_is_pre_order'][0];
- *
- *
- *
-$order = wc_create_order();
-$order->add_product( get_product( '12' ), 2 ); //(get_product with id and next is for quantity)
-$order->set_address( $address, 'billing' );
-$order->set_address( $address, 'shipping' );
-$order->add_coupon('Fresher','10','2'); // accepted param $couponcode, $couponamount,$coupon_tax
-$order->calculate_totals();
-
- *
- * $order->calculate_totals();
-// assign the order to the current user
-update_post_meta($order->id, '_customer_user', get_current_user_id() );
-// payment_complete
-$order->payment_complete();
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+// Required functions
+if ( ! function_exists( 'woothemes_queue_update' ) ) {
+	require_once( 'woo-includes/woo-functions.php' );
+}
+
+// Plugin updates
+woothemes_queue_update( plugin_basename( __FILE__ ), 'b2dc75e7d55e6f5bbfaccb59830f66b7', '178477' );
 
 // Check if WooCommerce is active and deactivate extension if it's not
 if ( ! is_woocommerce_active() ) {
 	return;
 }
-
 
 /**
  * The WC_Pre_Orders global object
@@ -68,9 +46,6 @@ if ( ! is_woocommerce_active() ) {
  * @name $wc_pre_orders
  * @global WC_Pre_Orders $GLOBALS['wc_pre_orders']
  */
-global $woo_multi;
-global $woo_objs;
-
 $GLOBALS['wc_pre_orders'] = new WC_Pre_Orders();
 
 /**
@@ -83,7 +58,7 @@ class WC_Pre_Orders {
 	/**
 	 * Plugin version number
 	 */
-    const VERSION = '1.0';
+	const VERSION = '1.4.4';
 
 	/**
 	 * Plugin file path without trailing slash
@@ -117,8 +92,6 @@ class WC_Pre_Orders {
 		// load core classes
 		$this->load_classes();
 
-        //include('woo_multi/woo_multi.php');
-
 		// load classes that require WC to be loaded
 		add_action( 'woocommerce_init', array( $this, 'init' ) );
 
@@ -136,18 +109,9 @@ class WC_Pre_Orders {
 		// Load translation files
 		add_action( 'init', array( $this, 'load_translation' ) );
 
-		//$_SESSION['hey'] = 'hey';
-
-
-		//var_dump($_SESSION);
-
 		// Un-schedule events on plugin deactivation
-		register_activation_hook( __FILE__, array( $this, 'activate' ) );
-
 		register_deactivation_hook( __FILE__, array( $this, 'deactivate' ) );
 	}
-
-
 
 	/**
 	 * Load core classes
@@ -269,18 +233,6 @@ class WC_Pre_Orders {
 		do_action( current_filter() . '_notification', $args, $message );
 	}
 
-	/**
-	 * Remove terms and scheduled events on plugin deactivation
-	 *
-	 * @since 1.0
-	 */
-	public function activate() {
-
-		if (!is_plugin_active('woocommerce-pre-orders/woocommerce-pre-orders.php')) {
-			echo 'ballz1';
-		}
-
-	}
 	/**
 	 * Remove terms and scheduled events on plugin deactivation
 	 *
