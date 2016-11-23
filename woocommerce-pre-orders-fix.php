@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: WooCommerce Pre-Orders Fix
+ * Plugin Name: WooCommerce Pre-Orders Fix2
  * Plugin URI: http://andrewmgunn.org/woocommerce-pre-orders-fix/
  * Description: Sell pre-orders for products in your WooCommerce store, multiple pre-order cart add-on.
  * Author: Andrew Gunn ;dfdfd
@@ -60,6 +60,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! is_woocommerce_active() ) {
 	return;
 }
+
 
 /**
  * The WC_Pre_Orders global object
@@ -138,9 +139,11 @@ class WC_Pre_Orders {
 		//$_SESSION['hey'] = 'hey';
 
 
-		var_dump($_SESSION);
+		//var_dump($_SESSION);
 
 		// Un-schedule events on plugin deactivation
+		register_activation_hook( __FILE__, array( $this, 'activate' ) );
+
 		register_deactivation_hook( __FILE__, array( $this, 'deactivate' ) );
 	}
 
@@ -266,6 +269,18 @@ class WC_Pre_Orders {
 		do_action( current_filter() . '_notification', $args, $message );
 	}
 
+	/**
+	 * Remove terms and scheduled events on plugin deactivation
+	 *
+	 * @since 1.0
+	 */
+	public function activate() {
+
+		if (!is_plugin_active('woocommerce-pre-orders/woocommerce-pre-orders.php')) {
+			echo 'ballz1';
+		}
+
+	}
 	/**
 	 * Remove terms and scheduled events on plugin deactivation
 	 *
