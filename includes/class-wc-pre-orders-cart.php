@@ -228,6 +228,8 @@ class WC_Pre_Orders_Cart {
                         //$woo_multi['items'][$i] = $cart_item;
 	                    $_SESSION['cart_count'] = $i;
 	                    $_SESSION['cart_items'] = $woo_multi;
+                        $_SESSION['cart_live'] = 'true';
+
                     }
 
 
