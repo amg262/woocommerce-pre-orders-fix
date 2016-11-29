@@ -46,10 +46,7 @@ class WC_Pre_Orders_Order  {
 		// adds a 'Release Date' line to pre-order product order items on the thank-you page, emails, my account, etc
 		add_filter( 'woocommerce_order_get_items', array( $this, 'add_product_release_date_item_meta' ), 10, 2 );
 	}
-
-	public function fahhh() {
-		var_dump($_SESSION);
-	}
+	
 
 	/**
 	 * New order status for WooCommerce 2.2 or later

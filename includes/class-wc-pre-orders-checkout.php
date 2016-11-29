@@ -134,11 +134,11 @@ class WC_Pre_Orders_Checkout {
 		
 		//if ($_SESSION['cart_items']) {
 			//var_dump($_SESSION);
-		//}
 
 		// get pre-ordered product
 		$product = WC_Pre_Orders_Cart::get_pre_order_product( $order_id );
 
+		//}
 		// indicate the order contains a pre-order
 		update_post_meta( $order_id, '_wc_pre_orders_is_pre_order', 1 );
 

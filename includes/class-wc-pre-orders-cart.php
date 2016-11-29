@@ -226,6 +226,7 @@ class WC_Pre_Orders_Cart {
                     	array_push($woo_multi, array($i => $cart_item ));
                         //update_option('woo_multi', array($i => $cart_item));
                         //$woo_multi['items'][$i] = $cart_item;
+
 	                    $_SESSION['cart_count'] = $i;
 	                    $_SESSION['cart_items'] = $woo_multi;
                         $_SESSION['cart_live'] = 'true';
@@ -238,6 +239,7 @@ class WC_Pre_Orders_Cart {
 			}
 		}
 
+		var_dump($_SESSION);
 		//print $_SESSION['cart_count'];
 
 		//var_dump(count($_SESSION['cart_items']));

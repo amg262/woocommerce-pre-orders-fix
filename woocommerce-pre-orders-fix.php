@@ -60,6 +60,8 @@ if ( !is_woocommerce_active() ) {
     return;
 }
 
+include_once('includes/WooSession.php');
+
 /**
  * The WC_Pre_Orders global object
  *
