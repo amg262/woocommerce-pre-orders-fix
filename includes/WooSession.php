@@ -45,10 +45,17 @@ class WooSession
     }
     
     public function woo_create_order() {
-        $woo_order = wc_create_order();
-        update_post_meta($woo_order->id, '_customer_user', get_current_user_id() );
-        $order->add_coupon( $discount['code'], ($discount['amount']/100) ); // not pennies (use dollars amount)
-        * indicate the order contains a pre-order
+        $order = wc_create_order();
+        update_post_meta($order->id, '_customer_user', get_current_user_id() );
+        update_post_meta( $order_id, '_wc_pre_orders_is_pre_order', 1 );
+        $order->set_address( $address_billing, 'billing' );
+        $order->set_address( $address_shipping, 'shipping' );
+        $order->update_status( 'pre-ordered' );
+        $order->add_coupon( 'wmfreeship' ); // not pennies (use dollars amount)
+        $order->calculate_totals();
+        
+
+        /* indicate the order contains a pre-order
         * update_post_meta( $order_id, '_wc_pre_orders_is_pre_order', 1 );
  /*
  * // save when the pre-order amount was charged (either upfront or upon release)
