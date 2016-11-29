@@ -100,6 +100,8 @@ class WC_Pre_Orders_Checkout {
 	 * @return string
 	 */
 	public function modify_place_order_button_text( $default_text ) {
+		
+		//var_dump($)
 
 		// only modify button text if the cart contains a pre-order
 		if ( ! WC_Pre_Orders_Cart::cart_contains_pre_order() )
@@ -128,9 +130,15 @@ class WC_Pre_Orders_Checkout {
 		if ( ! WC_Pre_Orders_Cart::cart_contains_pre_order() )
 			return;
 
+		//print $_SESSION['cart']
+		
+		//if ($_SESSION['cart_items']) {
+			//var_dump($_SESSION);
+
 		// get pre-ordered product
 		$product = WC_Pre_Orders_Cart::get_pre_order_product( $order_id );
 
+		//}
 		// indicate the order contains a pre-order
 		update_post_meta( $order_id, '_wc_pre_orders_is_pre_order', 1 );
 
