@@ -74,7 +74,8 @@ class WooSession
  * update_post_meta($order->id, '_customer_user', get_current_user_id() );
  * // payment_complete
   *
-  */
+  *//////
+        ///
 
     }
 
