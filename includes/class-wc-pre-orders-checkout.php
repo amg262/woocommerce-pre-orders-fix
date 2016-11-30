@@ -10,6 +10,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
+include_once __DIR__."/WooSession.php";
 /**
  * Pre-Orders Checkout class
  *
@@ -27,6 +28,8 @@ class WC_Pre_Orders_Checkout {
 	 * @return \WC_Pre_Orders_Checkout
 	 */
 	public function __construct() {
+
+
 
 		// modify the 'Place Order' button on the checkout page
 		add_filter( 'woocommerce_order_button_text', array( $this, 'modify_place_order_button_text' ) );
@@ -156,8 +159,11 @@ class WC_Pre_Orders_Checkout {
 	public function update_payment_complete_order_status( $new_status, $order_id ) {
 
 		$order = new WC_Order( $order_id );
-		$_SESSION['order'] = $order;
-		$_SESSION['order_id'] = $order_id;
+
+		global $woo_session;
+
+		$woo_session = \WooPreOrderFix\WooSession::getInstance();
+		$woo_session::getInstance()->get_this($order);
 
 		if ( ! WC_Pre_Orders_Order::order_contains_pre_order( $order ) )
 			return $new_status;
@@ -181,9 +187,7 @@ class WC_Pre_Orders_Checkout {
 	public function update_manual_payment_complete_order_status( $order_id ) {
 
 		$order = new WC_Order( $order_id );
-		$_SESSION['order'] = $order;
-		$_SESSION['order_id'] = $order_id;
-
+		
 
 		// don't update status for non pre-order orders
 		if ( ! WC_Pre_Orders_Order::order_contains_pre_order( $order ) )

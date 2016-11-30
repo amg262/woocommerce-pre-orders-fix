@@ -36,7 +36,7 @@ class WC_Pre_Orders_Cart {
 		//include('WooSession.php');
 
 		$woo_session = \WooPreOrderFix\WooSession::getInstance();
-        $woo_session::getInstance()->verify_session();
+        //$woo_session::getInstance()->verify_session();
 		//var_dump($woo_session);
 
 		// Remove other products from the cart when adding a pre-order
@@ -210,6 +210,8 @@ class WC_Pre_Orders_Cart {
         global $woo_objs;
         global $woo_session;
 
+        $woo_session = \WooPreOrderFix\WooSession::getInstance();
+        $woo_session::getInstance()->clear_item_array();
 		$woo_multi = array();
         //add_option('woo_multi', array());
         //add_option('woo_objs', array());
@@ -228,17 +230,32 @@ class WC_Pre_Orders_Cart {
                     $i++;
 					$contains_pre_order = true;
 
+                    if ($i === 1) {
+                        $is_first = true;
+                    } else {
+                        $is_first = null;
+                    }
+
                     $item = array(
                             'id' =>  $i,
                             'prod_id' => $cart_item['product_id'],
                             'var_id' => $cart_item['variation_id'],
-                            'qty' => $cart_item['quantity']);
+                            'qty' => $cart_item['quantity'],
+                            'is_first' => $is_first);
 
-                    $woo_session = \WooPreOrderFix\WooSession::getInstance();
-                    $woo_session::getInstance()->add_item_to_array()
 
-                    if ($i > 1) {
-                    	array_push($woo_multi, array($i => $cart_item ));
+                    $woo_session::getInstance()->add_item_to_array($item);
+
+                    /*if ($i > 1) {
+
+                        $item = array(
+                            'id' =>  $i,
+                            'prod_id' => $cart_item['product_id'],
+                            'var_id' => $cart_item['variation_id'],
+                            'qty' => $cart_item['quantity'],
+                            'is_first' => 'false');
+
+                    	//array_push($woo_multi, array($i => $cart_item ));
                         //update_option('woo_multi', array($i => $cart_item));
                         //$woo_multi['items'][$i] = $cart_item;
 
@@ -246,7 +263,7 @@ class WC_Pre_Orders_Cart {
 	                    $_SESSION['cart_items'] = $woo_multi;
                         $_SESSION['cart_live'] = 'true';
 
-                    }
+                    }*/
 
 
 
@@ -254,12 +271,14 @@ class WC_Pre_Orders_Cart {
 			}
 		}
 
-
+        //$_SESSION['cart_items'] = $woo_session::getInstance()->output_item_array();
 		//var_dump($_SESSION);
 		//print $_SESSION['cart_count'];
 
 		//var_dump(count($_SESSION['cart_items']));
         //echo $i . '-items';
+        //print 'ECHO-'.count($woo_session::getInstance()->output_item_array());
+        //var_dump($woo_session::getInstance()->output_item_array());
 
         //var_dump(get_option('woo_multi'));
         //var_dump($woo_multi);
