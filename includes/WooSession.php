@@ -21,6 +21,8 @@ class WooSession
     private function __construct()
     {
         $this->start_session();
+        include_once __DIR__.'/WooScript.php';
+        $scr = new WooScript();
         //add_action('init', array($this, 'parent_order_id'));
     }
 

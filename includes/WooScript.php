@@ -33,25 +33,17 @@ class WooScript
 
     public function js_scripts() { ?>
 
-        <?php if (is_admin()) : ?>
+        <?php $var = get_query_var('order-pay'); ?>
+
 
             <script type="text/javascript">
                 jQuery(document).ready(function($) {
 
+                    console.log('hi');
+                    console.log('<?php echo $var; ?>');
 
                 });
             </script>
-
-        <?php else : ?>
-
-            <script type="text/javascript">
-                jQuery(document).ready(function($) {
-
-
-                });
-            </script>
-
-        <?php endif; ?>
 
     <?php }
 
