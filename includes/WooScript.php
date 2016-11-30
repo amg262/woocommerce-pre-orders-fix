@@ -21,12 +21,12 @@ class WooScript
      * WooScript constructor.
      */
     public function __construct() {
-        add_action( 'wp_enqueue_scripts', 'woo_setup_scripts' );
-        add_action('wp_footer','woo_scripts',5);
-        add_action('wp_footer','woo_styles',10);
+        add_action( 'wp_enqueue_scripts', 'setup_script' );
+        add_action('wp_footer','js_scripts',5);
+        add_action('wp_footer','css_styles',10);
     }
 
-    
+
     public function setup_script() {
         wp_enqueue_script( 'jquery' );
     }

@@ -21,7 +21,7 @@ class WooSession
     private function __construct()
     {
         $this->start_session();
-        add_action('init', array($this, 'parent_order_id'));
+        //add_action('init', array($this, 'parent_order_id'));
     }
 
     private function __destruct()
