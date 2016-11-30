@@ -14,6 +14,8 @@ class WooSession
 
     private static $instance = null;
     private $session, $woo, $session_id;
+    private $cart_items = array();
+    private $item, $prev;
 
 
     // to prevent initiation with outer code.
@@ -71,6 +73,20 @@ class WooSession
             return null;
         }
 
+    }
+
+    public function add_item_to_array( $object ) {
+
+        if ($object !== null) {
+            $this->item = $object;
+
+            array_push($this->cart_items, $this->item);
+        }
+
+    }
+
+    public function output_item_array() {
+        return $this->cart_items;
     }
 
 

@@ -208,6 +208,7 @@ class WC_Pre_Orders_Cart {
 		global $woocommerce;
         global $woo_multi;
         global $woo_objs;
+        global $woo_session;
 
 		$woo_multi = array();
         //add_option('woo_multi', array());
@@ -226,6 +227,15 @@ class WC_Pre_Orders_Cart {
 				if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $cart_item['product_id'] ) ) {
                     $i++;
 					$contains_pre_order = true;
+
+                    $item = array(
+                            'id' =>  $i,
+                            'prod_id' => $cart_item['product_id'],
+                            'var_id' => $cart_item['variation_id'],
+                            'qty' => $cart_item['quantity']);
+
+                    $woo_session = \WooPreOrderFix\WooSession::getInstance();
+                    $woo_session::getInstance()->add_item_to_array()
 
                     if ($i > 1) {
                     	array_push($woo_multi, array($i => $cart_item ));
