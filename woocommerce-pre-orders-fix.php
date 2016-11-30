@@ -140,10 +140,6 @@ class WC_Pre_Orders
         // Load translation files
         add_action( 'init', array( $this, 'load_translation' ) );
 
-        //$_SESSION['hey'] = 'hey';
-
-
-        //var_dump($_SESSION);
 
         // Un-schedule events on plugin deactivation
         //add_action('admin_init', array($this, 'activate'));
@@ -285,8 +281,6 @@ class WC_Pre_Orders
      */
     public function activate()
     {
-
-
         flush_rewrite_rules();
         // Remove scheduling function before removing scheduled hook, or else it will get re-added
         if ( is_plugin_active( 'woocommerce-pre-orders/woocommerce-pre-orders.php' ) ) {
@@ -294,7 +288,6 @@ class WC_Pre_Orders
 
             return;
         }
-
     }
 
     /**
@@ -304,7 +297,6 @@ class WC_Pre_Orders
      */
     public function deactivate()
     {
-
         flush_rewrite_rules();
         // Remove scheduling function before removing scheduled hook, or else it will get re-added
         remove_action( 'init', array( $this->cron, 'add_scheduled_events' ) );

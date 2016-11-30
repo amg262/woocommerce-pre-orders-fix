@@ -239,7 +239,7 @@ class WC_Pre_Orders_Cart {
 			}
 		}
 
-		var_dump($_SESSION);
+		//var_dump($_SESSION);
 		//print $_SESSION['cart_count'];
 
 		//var_dump(count($_SESSION['cart_items']));

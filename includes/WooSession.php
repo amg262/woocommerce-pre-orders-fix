@@ -19,7 +19,7 @@ class WooSession
      */
     public function __construct()
     {
-        add_action('admin_init', array($this, 'woo_create_order'));
+        //add_action('admin_init', array($this, 'woo_create_order'));
     }
 
 
@@ -44,19 +44,78 @@ class WooSession
         
     }
 
-    public function woo_get_parent_order($order_id) {
+   /* public function woo_get_parent_order( $order_id ) {
 
+
+        $order = new WC_Order( $order_id );
+        $shipping = $order->get_shipping_address();
+        $billing = $order->get_billing_address();
+        /*$order = new WC_Order( $order_id );
+         * Shipping
+
+        $order->shipping_first_name
+        $order->shipping_last_name
+        $order->shipping_company
+        $order->shipping_address_1
+        $order->shipping_address_2
+        $order->shipping_city
+        $order->shipping_state
+        $order->shipping_postcode
+        $order->shipping_country
+        Billing
+
+        $order->billing_first_name
+        $order->billing_last_name
+        $order->billing_company
+        $order->billing_address_1
+        $order->billing_address_2
+        $order->billing_city
+        $order->billing_state
+        $order->billing_postcode
+        $order->billing_country
+
+
+        $address = array(
+            'first_name' => $order->shipping_first_name,
+            'last_name'  => $order->shipping_last_name,
+            'company'    => $order->shipping_company,
+            'email'      => $email,
+            'phone'      => '777-777-777-777',
+            'address_1'  => $order->shipping_address_1,
+            'address_2'  => $order->shipping_address_2,
+            'city'       => $order->shipping_city,
+            'state'      => $order->shipping_state,
+            'postcode'   => $order->shipping_postcode,
+            'country'    => $order->shipping_country
+        );
+    }*/
+    
+    public function woo_get_order( $order ) {
+        if ( ! is_object( $order ) ) {
+            $order = new WC_Order( $order );
+        }
+
+        echo $order->get_billing_address();
+        var_dump($order);
     }
     
     public function woo_create_order() {
+
+        //$parent_order = new WC_Order(5548);
+        $args = array('sdf'=>'4', 'nuu'=>'2');
         $order = wc_create_order();
         update_post_meta($order->id, '_customer_user', get_current_user_id() );
-        update_post_meta( $order_id, '_wc_pre_orders_is_pre_order', 1 );
-        $order->set_address( $address_billing, 'billing' );
-        $order->set_address( $address_shipping, 'shipping' );
+        update_post_meta( $order->id, '_wc_pre_orders_is_pre_order', 1 );
+        // $order->set_address( $parent_order->get_billing_address, 'billing' );
+        $order->set_address( $args, 'shipping' );
+        //$order->set_address( $parent_order->get_shipping_address, 'shipping' );
         $order->update_status( 'pre-ordered' );
-        $order->add_coupon( 'wmfreeship' ); // not pennies (use dollars amount)
-        $order->calculate_totals();
+
+        $order->order_custom_fields = get_post_custom( $order->id );
+
+        var_dump($order->get_billing_address);
+        //$order->add_coupon( 'wmfreeship' ); // not pennies (use dollars amount)
+        //$order->calculate_totals();
         
 
         /* indicate the order contains a pre-order

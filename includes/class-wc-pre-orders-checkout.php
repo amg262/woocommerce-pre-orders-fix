@@ -130,11 +130,6 @@ class WC_Pre_Orders_Checkout {
 		if ( ! WC_Pre_Orders_Cart::cart_contains_pre_order() )
 			return;
 
-		//print $_SESSION['cart']
-		
-		//if ($_SESSION['cart_items']) {
-			//var_dump($_SESSION);
-
 		// get pre-ordered product
 		$product = WC_Pre_Orders_Cart::get_pre_order_product( $order_id );
 
@@ -161,6 +156,8 @@ class WC_Pre_Orders_Checkout {
 	public function update_payment_complete_order_status( $new_status, $order_id ) {
 
 		$order = new WC_Order( $order_id );
+		$_SESSION['order'] = $order;
+		$_SESSION['order_id'] = $order_id;
 
 		if ( ! WC_Pre_Orders_Order::order_contains_pre_order( $order ) )
 			return $new_status;
@@ -184,6 +181,9 @@ class WC_Pre_Orders_Checkout {
 	public function update_manual_payment_complete_order_status( $order_id ) {
 
 		$order = new WC_Order( $order_id );
+		$_SESSION['order'] = $order;
+		$_SESSION['order_id'] = $order_id;
+
 
 		// don't update status for non pre-order orders
 		if ( ! WC_Pre_Orders_Order::order_contains_pre_order( $order ) )
