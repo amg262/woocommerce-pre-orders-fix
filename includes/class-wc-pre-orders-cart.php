@@ -232,20 +232,26 @@ class WC_Pre_Orders_Cart {
                     $i++;
 					$contains_pre_order = true;
 
+                    WC_Pre_Orders_Product::get_localized_availability_date($cart_item['product_id']);
+
                     if ($i === 1) {
                         $is_first = true;
                     } else {
                         $is_first = null;
                     }
 
+                    //var_dump($cart_item['_wc_pre_orders_availability_datetime']);
+                    //var_dump($cart_item['wc_pre_orders_availability_datetime']);
+
                     $item = array(
                             'id' =>  $i,
                             'prod_id' => $cart_item['product_id'],
-                            'var_id' => $cart_item['variation_id'],
+                            //'var_id' => $cart_item['variation_id'],
                             'qty' => $cart_item['quantity'],
                             'is_first' => $is_first);
 
 
+                    //var_dump($cart_item['data']);
                     $woo_session::getInstance()->add_item_to_array($item);
 
                     /*if ($i > 1) {
@@ -272,6 +278,8 @@ class WC_Pre_Orders_Cart {
 				}
 			}
 		}
+
+       // var_dump($woo_session->getInstance()->output_item_array());
 
         //$_SESSION['cart_items'] = $woo_session::getInstance()->output_item_array();
 		//var_dump($_SESSION);

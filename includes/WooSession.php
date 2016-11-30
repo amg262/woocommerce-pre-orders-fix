@@ -15,24 +15,46 @@ class WooSession
     private $loops, $woo, $session_id;
     private $cart_items = array();
     private $parent_order;
+    private $has_parent = true;
     public $ship_labels, $bill_labels;
     private $shipping = array();
     private $billing = array();
-
     private $item, $index, $parent_id;
 
     // to prevent initiation with outer code.
     private function __construct()
     {
         $this->start_session();
-        $this->loops = 0;
-        include_once __DIR__.'/WooScript.php';
-        $scr = new WooScript();
+        $this->build_meta_labels();
+
+         add_action('init', array($this, 'create_new_pre_order'));
+        //add_action('woocommerce_checkout_order_processed', array($this, 'create_new_pre_order'));
+    }
+
+    private function __destruct()
+    {
+        $this->end_session();
+    }
+
+
+    // The object is created from within the class itself
+    // only if the class has no instance.
+    public static function getInstance()
+    {
+        if ( self::$instance === null ) {
+            self::$instance = new WooSession();
+        }
+
+        return self::$instance;
+    }
+
+    public function build_meta_labels()
+    {
 
         $this->ship_labels = array(
-            'shipping_first_name',
-            'shipping_last_name',
-            'shipping_company',
+            'shipping_first_name' => '',
+            'shipping_last_name' => '',
+            'shipping_company' => '',
             'shipping_address_1',
             'shipping_address_2',
             'shipping_city',
@@ -56,27 +78,7 @@ class WooSession
             'billing_first_name',
             'billing_first_name',
         );
-
-        add_action('woocommerce_checkout_order_processed', array($this, 'handle_pre_orders'));
     }
-
-    private function __destruct()
-    {
-        $this->end_session();
-    }
-
-
-    // The object is created from within the class itself
-    // only if the class has no instance.
-    public static function getInstance()
-    {
-        if ( self::$instance === null ) {
-            self::$instance = new WooSession();
-        }
-
-        return self::$instance;
-    }
-
 
     public function start_session()
     {
@@ -131,70 +133,63 @@ class WooSession
         return $this->cart_items;
     }
 
-
-    public function get_parent_order() {
+    public function get_parent_order()
+    {
 
         return $this->parent_order;
     }
 
-    public function set_parent_order($order) {
+    public function set_parent_order( $order )
+    {
 
-        if ($this->loops == 0) {
+        if ( $order !== null && $this->has_parent == true ) {
+            $this->parent_order = $order;
+            $this->has_parent = false;
 
-            if ( $order !== null ) {
-                $this->parent_order = $order;
+            //var_dump($this->parent_order);
 
-                //var_dump($this->parent_order);
-
-                foreach ( $this->ship_labels as $row ) {
-                    $field = $this->parent_order->$row;
-                    $this->shipping[ $row ] = $field;
-                }
-
-                foreach ( $this->bill_labels as $row ) {
-                    $field = $this->parent_order->$row;
-                    $this->billing[ $row ] = $field;
-                }
+            foreach ( $this->ship_labels as $row ) {
+                $field = $this->parent_order->$row;
+                $this->shipping[ $row ] = $field;
             }
-            $this->loops++;
-        }
 
+            foreach ( $this->bill_labels as $row ) {
+                $field = $this->parent_order->$row;
+                $this->billing[ $row ] = $field;
+            }
+        }
     }
 
-    public function get_parent_bill_meta() {
+    public function get_parent_bill_meta()
+    {
         return $this->billing;
     }
 
-    public function get_parent_ship_meta() {
+    public function get_parent_ship_meta()
+    {
         return $this->shipping;
     }
 
-
-
-    public function handle_pre_orders() {
-        $items = $this->output_item_array();
-        $count = count($items);
-
-        foreach ($items as $item) {
-
-            $this->create_new_pre_order($item->prod_id, $item->qty);
-        }
-
-    }
-    public function create_new_pre_order($prod_id, $qty, $var_id = null)
+    public function create_new_pre_order()
     {
-
 
         $order = wc_create_order();
         update_post_meta( $order->id, '_customer_user', get_current_user_id() );
         update_post_meta( $order->id, '_wc_pre_orders_is_pre_order', 1 );
         //update_post_meta( $order->id, '_wc_pre_orders_when_charged', $prod_id->wc_pre_orders_when_to_charge );
 
-        $order->add_product($prod_id, $qty);
-        $order->set_address($this->get_parent_bill_meta(), 'billing' );
-        $order->set_address($this->get_parent_ship_meta(), 'shipping' );
+        $order->add_product( $item[ 'prod_id' ], $item[ 'qty' ] );
+        $order->set_address( $this->get_parent_bill_meta(), 'billing' );
+        $order->set_address( $this->get_parent_ship_meta(), 'shipping' );
+
+
+        $arr = array_merge($this->bill_labels, $this->billing);
+
+        //var_dump($arr);
+
         //$order->set_address( $parent_order->get_shipping_address, 'shipping' );
         $order->update_status( 'pre-ordered' );
+
 // get pre-ordered product
         //$product = WC_Pre_Orders_Cart::get_pre_order_product( $order_id );
 
@@ -225,3 +220,5 @@ class WooSession
       * update_post_meta( $order_id, '_wc_pre_orders_is_pre_order', 1 );*/
     }
 }
+
+
