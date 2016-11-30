@@ -156,6 +156,7 @@ class WooSession
                     $this->billing[ $row ] = $field;
                 }
             }
+            $this->loops++;
         }
 
     }
@@ -187,12 +188,21 @@ class WooSession
         $order = wc_create_order();
         update_post_meta( $order->id, '_customer_user', get_current_user_id() );
         update_post_meta( $order->id, '_wc_pre_orders_is_pre_order', 1 );
+        //update_post_meta( $order->id, '_wc_pre_orders_when_charged', $prod_id->wc_pre_orders_when_to_charge );
+
         $order->add_product($prod_id, $qty);
         $order->set_address($this->get_parent_bill_meta(), 'billing' );
         $order->set_address($this->get_parent_ship_meta(), 'shipping' );
         //$order->set_address( $parent_order->get_shipping_address, 'shipping' );
         $order->update_status( 'pre-ordered' );
+// get pre-ordered product
+        //$product = WC_Pre_Orders_Cart::get_pre_order_product( $order_id );
 
+        //}
+        // indicate the order contains a pre-order
+        //update_post_meta( $order_id, '_wc_pre_orders_is_pre_order', 1 );
+
+        // save when the pre-order amount was charged (either upfront or upon release)
         //$order->order_custom_fields = get_post_custom( $order->id );
 
         /* indicate the order contains a pre-order
