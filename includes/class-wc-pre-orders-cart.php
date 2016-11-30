@@ -232,7 +232,7 @@ class WC_Pre_Orders_Cart {
                     $i++;
 					$contains_pre_order = true;
 
-                    WC_Pre_Orders_Product::get_localized_availability_date($cart_item['product_id']);
+                    //WC_Pre_Orders_Product::get_localized_availability_date($cart_item['product_id']);
 
                     if ($i === 1) {
                         $is_first = true;

@@ -27,7 +27,7 @@ class WooSession
         $this->start_session();
         $this->build_meta_labels();
 
-         add_action('init', array($this, 'create_new_pre_order'));
+         //add_action('init', array($this, 'create_new_pre_order'));
         //add_action('woocommerce_checkout_order_processed', array($this, 'create_new_pre_order'));
     }
 
@@ -177,13 +177,23 @@ class WooSession
         update_post_meta( $order->id, '_customer_user', get_current_user_id() );
         update_post_meta( $order->id, '_wc_pre_orders_is_pre_order', 1 );
         //update_post_meta( $order->id, '_wc_pre_orders_when_charged', $prod_id->wc_pre_orders_when_to_charge );
-
+        update_post_meta($order->id, '_shipping_first_name', $this->get_parent_ship_meta());
         $order->add_product( $item[ 'prod_id' ], $item[ 'qty' ] );
-        $order->set_address( $this->get_parent_bill_meta(), 'billing' );
-        $order->set_address( $this->get_parent_ship_meta(), 'shipping' );
+        //$order->set_address( $this->get_parent_bill_meta(), 'billing' );
+        //$order->set_address( $this->get_parent_ship_meta(), 'shipping' );
+        // billing info
+      /*  add_post_meta($order->id, '_billing_address_1', $this->billing['billing_address_1']);
+        add_post_meta($order->id, '_billing_address_2', $this->billing['billing_address_2']);
+        add_post_meta($order->id, '_billing_city', $this->billing->billing_city);
+        add_post_meta($order->id, '_billing_state', $this->billing->billing_state);
+        add_post_meta($order->id, '_billing_postcode', $this->billing->_billing_postcode);
+        add_post_meta($order->id, '_billing_country', $this->billing->_billing_country, true);
+        add_post_meta($order->id, '_billing_email', $this->billing->_billing_email, true);
+        add_post_meta($order->id, '_billing_first_name', $this->billing->_billing_first_name, true);
+        add_post_meta($order->id, '_billing_last_name', $this->billing->_billing_last_name, true);
+        add_post_meta($order->id, '_billing_phone', $this->billing  ->billing_phone, true);
 
-
-        $arr = array_merge($this->bill_labels, $this->billing);
+        $arr = array_merge($this->bill_labels, $this->billing);*/
 
         //var_dump($arr);
 
