@@ -43,6 +43,10 @@ class WooSession
     public function woo_set_transient() {
         
     }
+
+    public function woo_get_parent_order($order_id) {
+
+    }
     
     public function woo_create_order() {
         $order = wc_create_order();
