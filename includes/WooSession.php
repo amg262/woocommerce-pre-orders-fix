@@ -12,7 +12,7 @@ namespace WooPreOrderFix;
 class WooSession
 {
     private static $instance = null;
-    private $session, $woo, $session_id;
+    private $loops, $woo, $session_id;
     private $cart_items = array();
     private $parent_order;
     public $ship_labels, $bill_labels;
@@ -25,6 +25,7 @@ class WooSession
     private function __construct()
     {
         $this->start_session();
+        $this->loops = 0;
         include_once __DIR__.'/WooScript.php';
         $scr = new WooScript();
 
@@ -138,21 +139,23 @@ class WooSession
 
     public function set_parent_order($order) {
 
-        if ($order !== null) {
-            $this->parent_order = $order;
+        if ($this->loops == 0) {
 
-            //var_dump($this->parent_order);
+            if ( $order !== null ) {
+                $this->parent_order = $order;
 
-            foreach ($this->ship_labels as $row) {
-                $field = $this->parent_order->$row;
-                $this->shipping[$row] = $field;
+                //var_dump($this->parent_order);
+
+                foreach ( $this->ship_labels as $row ) {
+                    $field = $this->parent_order->$row;
+                    $this->shipping[ $row ] = $field;
+                }
+
+                foreach ( $this->bill_labels as $row ) {
+                    $field = $this->parent_order->$row;
+                    $this->billing[ $row ] = $field;
+                }
             }
-
-            foreach ($this->bill_labels as $row) {
-                $field = $this->parent_order->$row;
-                $this->billing[$row] = $field;
-            }
-
         }
 
     }
