@@ -11,7 +11,8 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly
 }
-
+include_once __DIR__."/WooSession.php";
+include_once __DIR__."/WooAction.php";
 /**
  * Pre-Orders Order class
  *
@@ -35,7 +36,7 @@ class WC_Pre_Orders_Order  {
 
 		// automatically update the pre-order status when the order's status changes
 		add_action( 'woocommerce_order_status_changed', array( $this, 'auto_update_pre_order_status' ), 10, 3 );
-		add_action( 'woocommerce_order_status_changed', array( $this, 'fahhh' ), 10, 3 );
+		//add_action( 'woocommerce_order_status_changed', array( $this, 'fahhh' ), 10, 3 );
 
 		// automatically cancel a pre-order when it's parent order is trashed
 		add_action( 'wp_trash_post', array( $this, 'maybe_cancel_trashed_pre_order' ) );
@@ -325,8 +326,7 @@ class WC_Pre_Orders_Order  {
 	 */
 	public function auto_update_pre_order_status( $order_id, $old_order_status, $new_order_status ) {
 
-		include_once __DIR__.'/WooScript.php';
-		$script = new \WooPreOrderFix\WooScript($order_id);
+
 		// change to 'active' when changing order status to 'pre-ordered'
 		if ( 'pre-ordered' === $new_order_status ) {
 			$this->update_pre_order_status( $order_id, 'active' );
@@ -407,6 +407,11 @@ class WC_Pre_Orders_Order  {
 	 * @return array of order item arrays
 	 */
 	public function add_product_release_date_item_meta( $items, $order ) {
+
+		global $woo_session;
+		$woo_session = \WooPreOrderFix\WooSession::getInstance();
+		$woo_session::getInstance()->set_parent_order($order);
+
 		if ( self::order_contains_pre_order( $order ) ) {
 
 			$name = get_option( 'wc_pre_orders_availability_date_cart_title_text' );

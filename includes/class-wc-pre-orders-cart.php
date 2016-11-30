@@ -10,7 +10,9 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-include_once __DIR__.'/WooSession.php';
+include_once __DIR__."/WooSession.php";
+include_once __DIR__."/WooAction.php";
+
 /**
  * Pre-Orders Cart class
  *

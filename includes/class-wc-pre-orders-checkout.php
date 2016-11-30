@@ -103,7 +103,8 @@ class WC_Pre_Orders_Checkout {
 	 * @return string
 	 */
 	public function modify_place_order_button_text( $default_text ) {
-		
+
+		//var_dump($)
 
 		// only modify button text if the cart contains a pre-order
 		if ( ! WC_Pre_Orders_Cart::cart_contains_pre_order() )
@@ -183,7 +184,7 @@ class WC_Pre_Orders_Checkout {
 
 		$order = new WC_Order( $order_id );
 
-
+		
 		// don't update status for non pre-order orders
 		if ( ! WC_Pre_Orders_Order::order_contains_pre_order( $order ) )
 			return;
