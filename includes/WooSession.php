@@ -19,7 +19,13 @@ class WooSession
     // to prevent initiation with outer code.
     private function __construct()
     {
-        // The expensive process (e.g.,db connection) goes here.
+        $this->start_session();
+        //add_action('admin_init', array($this, 'verify_session'));
+    }
+
+    private function __destruct()
+    {
+        $this->end_session();
     }
 
 
@@ -37,11 +43,29 @@ class WooSession
 
     public function start_session()
     {
-
         if (!session_id()) {
             session_start();
             $this->session_id = session_id();
 
+            return $this->session_id;
+        }
+    }
+
+    public function end_session()
+    {
+        if (session_id()) {
+            session_destroy();
+            $this->session_id = null;
+
+            return $this->session_id;
+        }
+    }
+
+    public function verify_session()
+    {
+
+        if (session_id() === $this->session_id ) {
+            print $this->session_id;
             return $this->session_id;
         } else {
             return null;
@@ -49,20 +73,9 @@ class WooSession
 
     }
 
-    public function end_session()
+
+    public function create_new_pre_order()
     {
-
-        if (session_id()) {
-            session_destroy();
-            $this->session_id = null;
-
-            return $this->session_id;
-        }
-
-    }
-
-
-    public function create_new_pre_order() {
 
         //$parent_order = new WC_Order(5548);
         $args = array('sdf' => '4', 'nuu' => '2');

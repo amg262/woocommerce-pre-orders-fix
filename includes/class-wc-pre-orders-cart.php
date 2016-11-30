@@ -10,6 +10,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
+include_once __DIR__.'/WooSession.php';
 /**
  * Pre-Orders Cart class
  *
@@ -30,9 +31,13 @@ class WC_Pre_Orders_Cart {
 
 	    global $woo_multi;
         global $woo_objs;
+		global $woo_session;
 
+		//include('WooSession.php');
 
-
+		$woo_session = \WooPreOrderFix\WooSession::getInstance();
+        $woo_session::getInstance()->verify_session();
+		//var_dump($woo_session);
 
 		// Remove other products from the cart when adding a pre-order
 		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_cart' ), 15, 2 );
@@ -238,6 +243,7 @@ class WC_Pre_Orders_Cart {
 				}
 			}
 		}
+
 
 		//var_dump($_SESSION);
 		//print $_SESSION['cart_count'];
