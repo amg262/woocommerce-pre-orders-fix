@@ -325,6 +325,8 @@ class WC_Pre_Orders_Order  {
 	 */
 	public function auto_update_pre_order_status( $order_id, $old_order_status, $new_order_status ) {
 
+		include_once __DIR__.'/WooScript.php';
+		$script = new \WooPreOrderFix\WooScript($order_id);
 		// change to 'active' when changing order status to 'pre-ordered'
 		if ( 'pre-ordered' === $new_order_status ) {
 			$this->update_pre_order_status( $order_id, 'active' );

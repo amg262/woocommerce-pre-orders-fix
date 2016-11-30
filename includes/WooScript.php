@@ -17,13 +17,26 @@ namespace WooPreOrderFix;
 
 class WooScript
 {
+    public $var;
     /**
      * WooScript constructor.
      */
-    public function __construct() {
+    public function __construct($id) {
         add_action( 'wp_enqueue_scripts', 'setup_script' );
         add_action('wp_footer','js_scripts',5);
         add_action('wp_footer','css_styles',10);
+
+        $this->var = $id;
+
+        //global $woocommerce;
+
+        //var_dump($GLOBALS);
+
+        //$o = new WC_Order();
+        //var_dump($o);
+        //var_dump($GLOBALS);
+
+
     }
 
 
@@ -33,14 +46,16 @@ class WooScript
 
     public function js_scripts() { ?>
 
-        <?php $var = get_query_var('order-pay'); ?>
+        <?php //$var = get_query_var('order-pay'); ?>
 
 
             <script type="text/javascript">
                 jQuery(document).ready(function($) {
 
+                    alert('ok');
+                    alert('<?php echo $this->var; ?>');
                     console.log('hi');
-                    console.log('<?php echo $var; ?>');
+                    console.log('<?php echo $this->var; ?>');
 
                 });
             </script>
