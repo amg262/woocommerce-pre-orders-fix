@@ -10,6 +10,9 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
+include_once __DIR__."/WooSession.php";
+include_once __DIR__."/WooAction.php";
+
 /**
  * Pre-Orders Cart class
  *
@@ -20,7 +23,6 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 class WC_Pre_Orders_Cart {
 
 
-	public $wpo;
 	/**
 	 * Add hooks / filters
 	 *
@@ -29,9 +31,15 @@ class WC_Pre_Orders_Cart {
 	 */
 	public function __construct() {
 
-		include_once ( 'class-woo-po.php' );
-		$this->wpo = new WooPo();
+	    global $woo_multi;
+        global $woo_objs;
+		global $woo_session;
 
+		//include('WooSession.php');
+
+		$woo_session = \WooPreOrderFix\WooSession::getInstance();
+        //$woo_session::getInstance()->verify_session();
+		//var_dump($woo_session);
 
 		// Remove other products from the cart when adding a pre-order
 		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_cart' ), 15, 2 );
@@ -109,28 +117,9 @@ class WC_Pre_Orders_Cart {
 	public function validate_cart( $valid, $product_id ) {
 		global $woocommerce;
 
-<<<<<<< HEAD
-		if( $woocommerce->cart->get_cart_contents_count() >= 1 ) {
-
-
-			foreach ($woocommerce->cart->cart_contents as $cart_item) {
-
-				$product = $cart_item['product_id'];
-
-				if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $product ) ) {
-					$this->wpo->add_po_item($cart_item);
-				}
-
-			}
-
-		}
-
-		if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $product_id ) ) {
-=======
 
 
 		/*if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $product_id ) ) {
->>>>>>> c549e16e3889ce2108f934dd83495ba6c50bf7bb
 
 			// if a pre-order product is being added to cart, check if the cart already contains other products and empty it if it does
 			if( $woocommerce->cart->get_cart_contents_count() >= 1 ) {
@@ -164,8 +153,11 @@ class WC_Pre_Orders_Cart {
 
 				$valid = false;
 			}
-		}
+		}*/
 
+		$var = $this->cart_contains_pre_order();
+
+        //var_dump($var);
 		return $valid;
 	}
 
@@ -216,11 +208,12 @@ class WC_Pre_Orders_Cart {
 	 */
 	public static function cart_contains_pre_order() {
 		global $woocommerce;
-<<<<<<< HEAD
-=======
         global $woo_multi;
         global $woo_objs;
+        global $woo_session;
 
+        $woo_session = \WooPreOrderFix\WooSession::getInstance();
+        $woo_session::getInstance()->clear_item_array();
 		$woo_multi = array();
         //add_option('woo_multi', array());
         //add_option('woo_objs', array());
@@ -228,7 +221,6 @@ class WC_Pre_Orders_Cart {
 
         $i = 0;
         $j = 0;
->>>>>>> c549e16e3889ce2108f934dd83495ba6c50bf7bb
 
 		$contains_pre_order = false;
 
@@ -237,19 +229,35 @@ class WC_Pre_Orders_Cart {
 			foreach ( $woocommerce->cart->cart_contents as $cart_item ) {
 
 				if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $cart_item['product_id'] ) ) {
-<<<<<<< HEAD
-
-					$contains_pre_order = true;
-					break;
-				}
-			}
-		}
-=======
                     $i++;
 					$contains_pre_order = true;
 
-                    if ($i > 1) {
-                    	array_push($woo_multi, array($i => $cart_item ));
+                    if ($i === 1) {
+                        $is_first = true;
+                    } else {
+                        $is_first = null;
+                    }
+
+                    $item = array(
+                            'id' =>  $i,
+                            'prod_id' => $cart_item['product_id'],
+                            'var_id' => $cart_item['variation_id'],
+                            'qty' => $cart_item['quantity'],
+                            'is_first' => $is_first);
+
+
+                    $woo_session::getInstance()->add_item_to_array($item);
+
+                    /*if ($i > 1) {
+
+                        $item = array(
+                            'id' =>  $i,
+                            'prod_id' => $cart_item['product_id'],
+                            'var_id' => $cart_item['variation_id'],
+                            'qty' => $cart_item['quantity'],
+                            'is_first' => 'false');
+
+                    	//array_push($woo_multi, array($i => $cart_item ));
                         //update_option('woo_multi', array($i => $cart_item));
                         //$woo_multi['items'][$i] = $cart_item;
 
@@ -257,7 +265,7 @@ class WC_Pre_Orders_Cart {
 	                    $_SESSION['cart_items'] = $woo_multi;
                         $_SESSION['cart_live'] = 'true';
 
-                    }
+                    }*/
 
 
 
@@ -265,13 +273,17 @@ class WC_Pre_Orders_Cart {
 			}
 		}
 
-		var_dump($_SESSION);
+        //$_SESSION['cart_items'] = $woo_session::getInstance()->output_item_array();
+		//var_dump($_SESSION);
 		//print $_SESSION['cart_count'];
 
 		//var_dump(count($_SESSION['cart_items']));
         //echo $i . '-items';
->>>>>>> c549e16e3889ce2108f934dd83495ba6c50bf7bb
+        //print 'ECHO-'.count($woo_session::getInstance()->output_item_array());
+        //var_dump($woo_session::getInstance()->output_item_array());
 
+        //var_dump(get_option('woo_multi'));
+        //var_dump($woo_multi);
 		return $contains_pre_order;
 	}
 
@@ -318,7 +330,7 @@ class WC_Pre_Orders_Cart {
 
 		} else {
 
-			// cart doesn't contain pre-order//
+			// cart doesn't contain pre-order
 			return null;
 		}
 	}

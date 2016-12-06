@@ -10,6 +10,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
+include_once __DIR__."/WooSession.php";
 /**
  * Pre-Orders Checkout class
  *
@@ -27,6 +28,8 @@ class WC_Pre_Orders_Checkout {
 	 * @return \WC_Pre_Orders_Checkout
 	 */
 	public function __construct() {
+
+
 
 		// modify the 'Place Order' button on the checkout page
 		add_filter( 'woocommerce_order_button_text', array( $this, 'modify_place_order_button_text' ) );
@@ -100,7 +103,7 @@ class WC_Pre_Orders_Checkout {
 	 * @return string
 	 */
 	public function modify_place_order_button_text( $default_text ) {
-		
+
 		//var_dump($)
 
 		// only modify button text if the cart contains a pre-order
@@ -130,11 +133,6 @@ class WC_Pre_Orders_Checkout {
 		if ( ! WC_Pre_Orders_Cart::cart_contains_pre_order() )
 			return;
 
-		//print $_SESSION['cart']
-		
-		//if ($_SESSION['cart_items']) {
-			//var_dump($_SESSION);
-
 		// get pre-ordered product
 		$product = WC_Pre_Orders_Cart::get_pre_order_product( $order_id );
 
@@ -162,6 +160,7 @@ class WC_Pre_Orders_Checkout {
 
 		$order = new WC_Order( $order_id );
 
+
 		if ( ! WC_Pre_Orders_Order::order_contains_pre_order( $order ) )
 			return $new_status;
 
@@ -185,6 +184,7 @@ class WC_Pre_Orders_Checkout {
 
 		$order = new WC_Order( $order_id );
 
+		
 		// don't update status for non pre-order orders
 		if ( ! WC_Pre_Orders_Order::order_contains_pre_order( $order ) )
 			return;

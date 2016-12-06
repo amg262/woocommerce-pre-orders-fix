@@ -1,10 +1,9 @@
 <?php
 /**
- *
  * Plugin Name: WooCommerce Pre-Orders Fix
  * Plugin URI: http://andrewmgunn.org/woocommerce-pre-orders-fix/
  * Description: Sell pre-orders for products in your WooCommerce store, multiple pre-order cart add-on.
- * Author: Andrew Gunn
+ * Author: Andrew Gunn ;dfdfd
  * Author URI: http://andrewgunn.org
  * Version: 1.0
  * Text Domain: woocommerce-pre-orders-fix
@@ -21,8 +20,6 @@
  * @copyright Copyright (c) 2015, WooThemes
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0
  *
-<<<<<<< HEAD
-=======
  *
  *
  * indicate the order contains a pre-order
@@ -51,20 +48,12 @@
  * update_post_meta($order->id, '_customer_user', get_current_user_id() );
  * // payment_complete
  * $order->payment_complete();
->>>>>>> c549e16e3889ce2108f934dd83495ba6c50bf7bb
  */
 
 if ( !defined( 'ABSPATH' ) ) {
     exit;
 }
 
-// Required functions
-if ( ! function_exists( 'woothemes_queue_update' ) ) {
-	require_once( 'woo-includes/woo-functions.php' );
-}
-
-// Plugin updates
-woothemes_queue_update( plugin_basename( __FILE__ ), 'b2dc75e7d55e6f5bbfaccb59830f66b7', '178477' );
 
 // Check if WooCommerce is active and deactivate extension if it's not
 if ( !is_woocommerce_active() ) {
@@ -79,14 +68,10 @@ include_once('includes/WooSession.php');
  * @name $wc_pre_orders
  * @global WC_Pre_Orders $GLOBALS ['wc_pre_orders']
  */
-<<<<<<< HEAD
-$GLOBALS['wc_pre_orders'] = new WC_Pre_Orders();
-=======
 global $woo_multi;
 global $woo_objs;
 
 $GLOBALS[ 'wc_pre_orders' ] = new WC_Pre_Orders();
->>>>>>> c549e16e3889ce2108f934dd83495ba6c50bf7bb
 
 /**
  * Main Plugin Class
@@ -96,17 +81,10 @@ $GLOBALS[ 'wc_pre_orders' ] = new WC_Pre_Orders();
 class WC_Pre_Orders
 {
 
-<<<<<<< HEAD
-	/**
-	 * Plugin version number
-	 */
-	const VERSION = '1.4.4';
-=======
     /**
      * Plugin version number
      */
     const VERSION = '1.0';
->>>>>>> c549e16e3889ce2108f934dd83495ba6c50bf7bb
 
     /**
      * Plugin file path without trailing slash
@@ -142,16 +120,11 @@ class WC_Pre_Orders
         // load core classes
         $this->load_classes();
 
-<<<<<<< HEAD
-		// load classes that require WC to be loaded
-		add_action( 'woocommerce_init', array( $this, 'init' ) );
-=======
         //include('woo_multi/woo_multi.php');
 
         // load classes that require WC to be loaded
 
         add_action( 'woocommerce_init', array( $this, 'init' ) );
->>>>>>> c549e16e3889ce2108f934dd83495ba6c50bf7bb
 
         // add pre-order notification emails
         add_filter( 'woocommerce_email_classes', array( $this, 'add_email_classes' ) );
@@ -167,22 +140,6 @@ class WC_Pre_Orders
         // Load translation files
         add_action( 'init', array( $this, 'load_translation' ) );
 
-<<<<<<< HEAD
-		// Un-schedule events on plugin deactivation
-		register_deactivation_hook( __FILE__, array( $this, 'deactivate' ) );
-	}
-
-	/**
-	 * Load core classes
-	 *
-	 * @since 1.0
-	 */
-	public function load_classes() {
-=======
-        //$_SESSION['hey'] = 'hey';
-
-
-        //var_dump($_SESSION);
 
         // Un-schedule events on plugin deactivation
         //add_action('admin_init', array($this, 'activate'));
@@ -202,7 +159,6 @@ class WC_Pre_Orders
         // load wp-cron hooks for scheduled events
         require( 'includes/class-wc-pre-orders-cron.php' );
         $this->cron = new WC_Pre_Orders_Cron();
->>>>>>> c549e16e3889ce2108f934dd83495ba6c50bf7bb
 
         // load manager class to process pre-order actions
         require( 'includes/class-wc-pre-orders-manager.php' );
@@ -325,8 +281,6 @@ class WC_Pre_Orders
      */
     public function activate()
     {
-
-
         flush_rewrite_rules();
         // Remove scheduling function before removing scheduled hook, or else it will get re-added
         if ( is_plugin_active( 'woocommerce-pre-orders/woocommerce-pre-orders.php' ) ) {
@@ -334,7 +288,6 @@ class WC_Pre_Orders
 
             return;
         }
-
     }
 
     /**
@@ -344,7 +297,6 @@ class WC_Pre_Orders
      */
     public function deactivate()
     {
-
         flush_rewrite_rules();
         // Remove scheduling function before removing scheduled hook, or else it will get re-added
         remove_action( 'init', array( $this->cron, 'add_scheduled_events' ) );
