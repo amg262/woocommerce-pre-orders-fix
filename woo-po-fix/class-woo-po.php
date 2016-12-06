@@ -9,35 +9,37 @@
 namespace WooPoFix;
 
 
-class WooPo {
+class WooPo
+{
 
 
-	private $po_items = array();
-	private $current, $previous;
-	/**
-	 * WooPo constructor.
-	 *
-	 * @param $cart
-	 */
-	public function __construct( ) {
+    private $po_items = array();
+    private $current, $previous;
 
-	}
+    /**
+     * WooPo constructor.
+     *
+     * @param $cart
+     */
+    public function __construct()
+    {
 
-	public function get_po_items() {
-		return $this->po_items;
+    }
 
-	}
+    public function get_po_items()
+    {
+        return $this->po_items;
 
-	public function add_po_item($cart_item) {
+    }
 
-		if ($cart_item !== null) {
-			array_push($this->po_items, $cart_item);
-		}
+    public function add_po_item($cart_item)
+    {
 
-	}
+        if ($cart_item !== null) {
+            array_push($this->po_items, $cart_item);
+        }
 
-
-
+    }
 
 
 }
