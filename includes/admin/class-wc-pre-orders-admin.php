@@ -69,12 +69,12 @@ class WC_Pre_Orders_Admin {
 		}
 
 		// Upgrade - installed version lower than plugin version?
-		if ( -1 === version_compare( $installed_version, WC_Pre_Orders::VERSION ) ) {
+		if ( -1 === version_compare( $installed_version, WC_PRE_ORDERS_VERSION ) ) {
 
 			$this->upgrade( $installed_version );
 
 			// New version number.
-			update_option( 'wc_pre_orders_version', WC_Pre_Orders::VERSION );
+			update_option( 'wc_pre_orders_version', WC_PRE_ORDERS_VERSION );
 		}
 	}
 
@@ -129,10 +129,15 @@ class WC_Pre_Orders_Admin {
 			$suffix = defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ? '' : '.min';
 
 			// Admin CSS
-			wp_enqueue_style( 'wc_pre_orders_admin', $wc_pre_orders->get_plugin_url() . '/assets/css/wc-pre-orders-admin.css', WC_Pre_Orders::VERSION );
+			wp_enqueue_style( 'wc_pre_orders_admin', $wc_pre_orders->get_plugin_url() . '/assets/css/wc-pre-orders-admin.css', WC_PRE_ORDERS_VERSION );
+
+			// WC < 2.6 doesn't recognize calendar glyph in recent Dashicons.
+			if ( version_compare( WC()->version, '2.6', '<' ) ) {
+				wp_enqueue_style( 'wc_pre_orders_admin_deprecated', $wc_pre_orders->get_plugin_url() . '/assets/css/wc-pre-orders-admin-deprecated.css', WC_PRE_ORDERS_VERSION );
+			}
 
 			// Admin JS
-			wp_enqueue_script( 'wc_pre_orders_admin', $wc_pre_orders->get_plugin_url() . '/assets/js/admin/wc-pre-orders-admin' . $suffix . '.js', WC_Pre_Orders::VERSION );
+			wp_enqueue_script( 'wc_pre_orders_admin', $wc_pre_orders->get_plugin_url() . '/assets/js/admin/wc-pre-orders-admin' . $suffix . '.js', WC_PRE_ORDERS_VERSION );
 
 			// Load WooCommerce CSS/JS on custom menu page.
 			if ( ( 'woocommerce_page_wc_pre_orders' == $hook_suffix ) && version_compare( WOOCOMMERCE_VERSION, '2.3.0', '<' ) ) {
@@ -156,18 +161,6 @@ class WC_Pre_Orders_Admin {
 			}
 		}
 
-		// Add/Edit product page.
-		if ( 'post.php' == $hook_suffix || 'post-new.php' == $hook_suffix ) {
-			wp_enqueue_script( 'wc_pre_orders_admin_products', $wc_pre_orders->get_plugin_url() . '/assets/js/admin/wc-pre-orders-admin-products' . $suffix . '.js', WC_Pre_Orders::VERSION );
-
-			wp_localize_script(
-				'wc_pre_orders_admin_products',
-				'wc_pre_orders_admin_products_params',
-				array(
-					'product_types' => WC_Pre_Orders::get_supported_product_types()
-				)
-			);
-		}
 	}
 }
 

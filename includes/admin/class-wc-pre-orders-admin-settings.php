@@ -109,7 +109,7 @@ class WC_Pre_Orders_Admin_Settings {
 				'desc'     => __( 'Add an optional message to the single product page below the price. Use this to announce when the pre-order will be available by using {availability_date} and {availability_time}. Limited HTML is allowed. Leave blank to disable.', 'wc-pre-orders' ),
 				'desc_tip' => true,
 				'id'       => 'wc_pre_orders_single_product_message',
-				'default'  => sprintf( __( 'This item will be released on %s.', 'wc-pre-orders' ), '{availability_date}' ),
+				'default'  => sprintf( __( 'This item will be released %s.', 'wc-pre-orders' ), '{availability_date}' ),
 				'type'     => 'textarea',
 			),
 
@@ -118,7 +118,7 @@ class WC_Pre_Orders_Admin_Settings {
 				'desc'     => __( 'Add an optional message to each pre-order enabled product on the shop loop page above the add to cart button. Use this to announce when the pre-order will be available by using {availability_date} and {availability_time}. Limited HTML is allowed. Leave blank to disable.', 'wc-pre-orders' ),
 				'desc_tip' => true,
 				'id'       => 'wc_pre_orders_shop_loop_product_message',
-				'default'  => sprintf( __( 'Available on %s.', 'wc-pre-orders' ), '{availability_date}' ),
+				'default'  => sprintf( __( 'Available %s.', 'wc-pre-orders' ), '{availability_date}' ),
 				'type'     => 'textarea',
 			),
 
@@ -135,7 +135,7 @@ class WC_Pre_Orders_Admin_Settings {
 				'desc'     => __( 'This controls the title of the availability date section on the cart/checkout page. Leave blank to disable display of the availability date in the cart.', 'wc-pre-orders' ),
 				'desc_tip' => true,
 				'id'       => 'wc_pre_orders_availability_date_cart_title_text',
-				'default'  => __( 'Available On', 'wc-pre-orders' ),
+				'default'  => __( 'Available', 'wc-pre-orders' ),
 				'type'     => 'text',
 			),
 
@@ -144,7 +144,7 @@ class WC_Pre_Orders_Admin_Settings {
 				'desc'     => __( 'This controls the order total format when the cart contains a pre-order charged upon release. Use this to indicate when the customer will be charged for their pre-order by using {availability_date} and {order_total}.', 'wc-pre-orders' ),
 				'desc_tip' => true,
 				'id'       => 'wc_pre_orders_upon_release_order_total_format',
-				'default'  => sprintf( __( '%s charged on %s', 'wc-pre-orders' ), '{order_total}', '{availability_date}' ),
+				'default'  => sprintf( __( '%s charged %s', 'wc-pre-orders' ), '{order_total}', '{availability_date}' ),
 				'css'      => 'min-width: 300px;',
 				'type'     => 'text',
 			),
@@ -159,6 +159,21 @@ class WC_Pre_Orders_Admin_Settings {
 				'type'     => 'text',
 			),
 
+			array( 'type' => 'sectionend' ),
+
+			array(
+				'title' => __( 'Staging/Test', 'wc-pre-orders' ),
+				'type'  => 'title'
+			),
+
+			array(
+				'title'    => __( 'Disable automated pre order processing.', 'wc-pre-orders' ),
+				'desc'     => __( ' This is used for when you\'re on a staging/testing site and don\'t want any pre orders to be processed automatically.', 'wc-pre-orders' ),
+				'desc_tip' => true,
+				'id'       => 'wc_pre_orders_disable_auto_processing',
+				'default'  => 'no',
+				'type'     => 'checkbox',
+			),
 			array( 'type' => 'sectionend' ),
 		) );
 	}

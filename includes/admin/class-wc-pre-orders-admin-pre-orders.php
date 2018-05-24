@@ -38,9 +38,6 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 		// Add 'Pre-Orders' link under WooCommerce menu.
 		add_action( 'admin_menu', array( $this, 'add_menu_link' ) );
 
-		// Pre-orders actions.
-		add_action( 'admin_init', array( $this, 'process_actions' ) );
-
 		// Pre-Orders list table settings
 		add_action( 'in_admin_header',   array( $this, 'load_pre_orders_list_table' ) );
 		add_filter( 'set-screen-option', array( $this, 'set_pre_orders_list_option' ), 10, 3 );
@@ -63,7 +60,7 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 	 */
 	public function add_menu_link() {
 
-		add_submenu_page(
+		$hook = add_submenu_page(
 			'woocommerce',
 			__( 'Pre-Orders', 'wc-pre-orders' ),
 			__( 'Pre-Orders', 'wc-pre-orders' ),
@@ -74,6 +71,7 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 
 		// add the Pre-Orders list Screen Options
 		add_action( 'load-woocommerce_page_wc_pre_orders', array( $this, 'add_pre_orders_list_options' ) );
+		add_action( 'load-' . $hook, array( $this, 'process_actions' ) );
 	}
 
 	/**
@@ -153,10 +151,42 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 	}
 
 	/**
+	 * Processes the cancelling of individual pre-order.
+	 *
+	 * @since 1.4.6
+	 * @version 1.4.7
+	 * @return bool
+	 */
+	public function process_cancel_pre_order_action() {
+		if ( empty( $_GET['action'] ) || 'cancel_pre_order' !== $_GET['action'] ) {
+			return;
+		}
+
+		if ( ! empty( $_GET['cancel_pre_order_nonce'] ) && ! wp_verify_nonce( $_GET['cancel_pre_order_nonce'], 'cancel_pre_order' ) ) {
+			wp_die( __( 'Action failed. Please refresh the page and retry.', 'wc-pre-orders' ) );
+		}
+
+		// User check.
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_die( __( 'You do not have the correct permissions to do this.', 'wc-pre-orders' ) );
+		}
+
+		$order_id = absint( $_GET['order_id'] );
+
+		WC_Pre_Orders_Manager::cancel_pre_order( $order_id );
+
+		$this->_redirect_with_notice( sprintf( __( 'Pre-order #%s cancelled.', 'wc-pre-orders' ), $order_id ) );
+	}
+
+	/**
 	 * Process the actions from the 'Actions' tab.
 	 */
 	public function process_actions_tab() {
 		global $wc_pre_orders;
+
+		if ( empty( $_POST['wc_pre_orders_action'] ) ) {
+			return;
+		}
 
 		// Security check.
 		if ( ! wp_verify_nonce( $_POST['_wpnonce'], 'wc-pre-orders-process-actions' ) ) {
@@ -227,53 +257,23 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 			default :
 				break;
 		}
+
+		wp_safe_redirect( esc_url_raw( add_query_arg( 'success', $_POST['wc_pre_orders_action'] ) ) );
+		exit;
 	}
 
 	/**
-	 * Get the current action selected from the bulk actions dropdown, verifying
-	 * that it's a valid action to perform.
-	 *
-	 * @see WP_List_Table::current_action()
-	 *
-	 * @return string|bool The action name or False if no action was selected.
+	 * Process the actions from the 'Manage' tab.
 	 */
-	public function current_action() {
-		$current_action = false;
-
-		// Process actions.
-		if ( ! empty( $_REQUEST['wc_pre_orders_action'] ) ) {
-
-			$this->process_actions_tab();
-
-			wp_safe_redirect( esc_url_raw( add_query_arg( 'success', $_POST['wc_pre_orders_action'] ) ) );
-
-			exit;
-		}
-
-		if ( isset( $_REQUEST['action'] ) && -1 != $_REQUEST['action'] ) {
-			$current_action = $_REQUEST['action'];
-		}
-
-		if ( isset( $_REQUEST['action2'] ) && -1 != $_REQUEST['action2'] ) {
-			$current_action = $_REQUEST['action2'];
-		}
-
-		if ( $current_action && ! array_key_exists( $current_action, $this->get_bulk_actions() ) ) {
-			return false;
-		}
-
-		return $current_action;
-	}
-
-	/**
-	 * Handle actions for both individual items and bulk edit
-	 *
-	 * @since 1.0
-	 */
-	public function process_actions() {
-
+	public function process_manage_tab() {
 		// Get the current action (if any).
 		$action = $this->current_action();
+
+		// Cancellation of individual pre-order should be handled by
+		// self::process_cancel_pre_order_action.
+		if ( 'cancel_pre_order' === $action ) {
+			return;
+		}
 
 		// Get the set of orders to operate on.
 		$order_ids = isset( $_REQUEST['order_id'] ) ? array_map( 'absint', $_REQUEST['order_id'] ): array();
@@ -351,22 +351,48 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 				break;
 			}
 
-			$message_nonce = wp_create_nonce( __FILE__ );
-
-			set_transient( $this->message_transient_prefix . $message_nonce, array( 'messages' => implode( '  ', $messages ) ), 60 * 60 );
-
-			// Get our next destination, stripping out all actions and other unneeded parameters.
-			if ( isset( $_REQUEST['_wp_http_referer'] ) ) {
-				$redirect_url = $_REQUEST['_wp_http_referer'];
-			} else {
-				$redirect_url = remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'action', 'action2', 'order_id', 'customer_message', 'customer_message2' ), stripslashes( $_SERVER['REQUEST_URI'] ) );
-			}
-
-
-			wp_redirect( esc_url_raw( add_query_arg( 'message', $message_nonce, $redirect_url ) ) );
-			exit;
-
+			$this->_redirect_with_notice( implode( '  ', $messages ) );
 		}
+	}
+
+	/**
+	 * Get the current action selected from the bulk actions dropdown, verifying
+	 * that it's a valid action to perform.
+	 *
+	 * @see WP_List_Table::current_action()
+	 *
+	 * @return string|bool The action name or False if no action was selected.
+	 */
+	public function current_action() {
+		$current_action = false;
+
+		if ( isset( $_REQUEST['action'] ) && -1 != $_REQUEST['action'] ) {
+			$current_action = $_REQUEST['action'];
+		}
+
+		if ( isset( $_REQUEST['action2'] ) && -1 != $_REQUEST['action2'] ) {
+			$current_action = $_REQUEST['action2'];
+		}
+
+		$valid_actions   = array_keys( $this->get_bulk_actions() );
+		$valid_actions[] = 'cancel_pre_order';
+
+		if ( $current_action && ! in_array( $current_action, $valid_actions ) ) {
+			return false;
+		}
+
+		return $current_action;
+	}
+
+	/**
+	 * Dispatch actions from Manage tab and Actions tab.
+	 *
+	 * @since 1.0
+	 */
+	public function process_actions() {
+		$this->process_actions_tab();
+		$this->process_manage_tab();
+		$this->process_cancel_pre_order_action();
 	}
 
 	/**
@@ -446,6 +472,16 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 			require_once( $woocommerce->plugin_path() . '/admin/woocommerce-admin-settings.php' );
 		}
 
+		// TODO: cache this results? this will be called again when form is rendered.
+		$pre_order_products = WC_Pre_Orders_Manager::get_all_pre_order_enabled_products();
+		if ( empty( $pre_order_products ) ) {
+			?>
+			<div class="notice notice-warning">
+				<p><?php _e( 'There is no pre-order product currently. List of pre-order products will appear in the drop-down Product below.', 'wc-pre-orders' ); ?></p>
+			</div>
+			<?php
+		}
+
 		// Add 'submit_button' woocommerce_admin_fields() field type.
 		add_action( 'woocommerce_admin_field_submit_button', array( $this, 'generate_submit_button' ) );
 
@@ -514,14 +550,10 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 	 */
 	private function get_action_fields( $section ) {
 
-		$products = array( ' ' => '' );
+		$products = array( '' => __( 'Select a Product', 'wc-pre-orders' ) );
 
 		foreach ( WC_Pre_Orders_Manager::get_all_pre_order_enabled_products() as $product ) {
-			if ( method_exists( $product, 'get_formatted_name' ) ) {
-				$products[ $product->id ] = $product->get_formatted_name();
-			} else {
-				$products[ $product->id ] = woocommerce_get_formatted_product_name( $product );
-			}
+			$products[ $product->get_id() ] = $product->get_formatted_name();
 		}
 
 		$fields = array(
@@ -530,26 +562,32 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 
 				array(
 					'name' => __( 'Email Pre-Order Customers', 'wc-pre-orders' ),
-					'desc' => sprintf( __( 'You may send an email message to all customers who have pre-ordered a specific product. This will use the default template specified for the %sCustomer Note%s Email.', 'wc-pre-orders' ), '<a href="' . admin_url( 'admin.php?page=woocommerce_settings&tab=email&section=WC_Email_Customer_Note' ) . '">', '</a>' ),
+					'desc' => sprintf( __( 'You may send an email message to all customers who have pre-ordered a specific product. This will use the default template specified for the %sCustomer Note%s Email.', 'wc-pre-orders' ), '<a href="' . admin_url( 'admin.php?page=wc-settings&tab=email&section=wc_email_customer_note' ) . '">', '</a>' ),
 					'type' => 'title'
 				),
 
 				array(
-					'id'       => 'wc_pre_orders_action_product',
-					'name'     => __( 'Product', 'wc-pre-orders' ),
-					'desc_tip' => __( 'Select which product to email all pre-ordered customers.' ),
-					'default'  => ' ',
-					'options'  => $products,
-					'type'     => 'select',
+					'id'                => 'wc_pre_orders_action_product',
+					'name'              => __( 'Product', 'wc-pre-orders' ),
+					'desc_tip'          => __( 'Select which product to email all pre-ordered customers.', 'wc-pre-orders' ),
+					'default'           => ' ',
+					'options'           => $products,
+					'type'              => 'select',
+					'custom_attributes' => array(
+						'required' => 'required',
+					),
 				),
 
 				array(
-					'id'       => 'wc_pre_orders_action_email_message',
-					'name'     => __( 'Message', 'wc-pre-orders' ),
-					'desc_tip' => __( 'Enter a message to include in the email notification to customer. Limited HTML allowed.', 'wc-pre-orders' ),
-					'css'      => 'min-width: 300px;',
-					'default'  => '',
-					'type'     => 'textarea',
+					'id'                => 'wc_pre_orders_action_email_message',
+					'name'              => __( 'Message', 'wc-pre-orders' ),
+					'desc_tip'          => __( 'Enter a message to include in the email notification to customer. Limited HTML allowed.', 'wc-pre-orders' ),
+					'css'               => 'min-width: 300px;',
+					'default'           => '',
+					'type'              => 'textarea',
+					'custom_attributes' => array(
+						'required' => 'required',
+					),
 				),
 
 				array( 'type' => 'sectionend' ),
@@ -569,20 +607,26 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 				),
 
 				array(
-					'id'       => 'wc_pre_orders_action_product',
-					'name'     => __( 'Product', 'wc-pre-orders' ),
-					'desc_tip' => __( 'Select which product to change the release date for.' ),
-					'default'  => ' ',
-					'options'  => $products,
-					'type'     => 'select',
+					'id'                => 'wc_pre_orders_action_product',
+					'name'              => __( 'Product', 'wc-pre-orders' ),
+					'desc_tip'          => __( 'Select which product to change the release date for.', 'wc-pre-orders' ),
+					'default'           => ' ',
+					'options'           => $products,
+					'type'              => 'select',
+					'custom_attributes' => array(
+						'required' => 'required',
+					),
 				),
 
 				array(
-					'id'       => 'wc_pre_orders_action_new_availability_date',
-					'name'     => __( 'New Availability Date', 'wc-pre-orders' ),
-					'desc_tip' => __( 'The new availability date for the product. This must be later than the current availability date.', 'wc-pre-orders' ),
-					'default'  => '',
-					'type'     => 'text',
+					'id'                => 'wc_pre_orders_action_new_availability_date',
+					'name'              => __( 'New Availability Date', 'wc-pre-orders' ),
+					'desc_tip'          => __( 'The new availability date for the product. This must be later than the current availability date.', 'wc-pre-orders' ),
+					'default'           => '',
+					'type'              => 'text',
+					'custom_attributes' => array(
+						'required' => 'required',
+					),
 				),
 
 				array(
@@ -619,12 +663,15 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 				),
 
 				array(
-					'id'       => 'wc_pre_orders_action_product',
-					'name'     => __( 'Product', 'wc-pre-orders' ),
-					'desc_tip' => __( 'Select which product to complete all pre-orders for.' ),
-					'default'  => ' ',
-					'options'  => $products,
-					'type'     => 'select',
+					'id'                => 'wc_pre_orders_action_product',
+					'name'              => __( 'Product', 'wc-pre-orders' ),
+					'desc_tip'          => __( 'Select which product to complete all pre-orders for.', 'wc-pre-orders' ),
+					'default'           => ' ',
+					'options'           => $products,
+					'type'              => 'select',
+					'custom_attributes' => array(
+						'required' => 'required',
+					),
 				),
 
 				array(
@@ -660,12 +707,15 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 				),
 
 				array(
-					'id'       => 'wc_pre_orders_action_product',
-					'name'     => __( 'Product', 'wc-pre-orders' ),
-					'desc_tip' => __( 'Select which product to cancel all pre-orders for.' ),
-					'default'  => ' ',
-					'options'  => $products,
-					'type'     => 'select',
+					'id'                => 'wc_pre_orders_action_product',
+					'name'              => __( 'Product', 'wc-pre-orders' ),
+					'desc_tip'          => __( 'Select which product to cancel all pre-orders for.', 'wc-pre-orders' ),
+					'default'           => ' ',
+					'options'           => $products,
+					'type'              => 'select',
+					'custom_attributes' => array(
+						'required' => 'required',
+					),
 				),
 
 				array(
@@ -721,6 +771,29 @@ class WC_Pre_Orders_Admin_Pre_Orders {
 		}
 
 		return $status;
+	}
+
+	/**
+	 * Redirect with message notice.
+	 *
+	 * @since 1.4.7
+	 *
+	 * @param string $message Message to display
+	 */
+	protected function _redirect_with_notice( $message ) {
+		$message_nonce = wp_create_nonce( __FILE__ );
+
+		set_transient( $this->message_transient_prefix . $message_nonce, array( 'messages' => $message ), 60 * 60 );
+
+		// Get our next destination, stripping out all actions and other unneeded parameters.
+		if ( isset( $_REQUEST['_wp_http_referer'] ) ) {
+			$redirect_url = $_REQUEST['_wp_http_referer'];
+		} else {
+			$redirect_url = remove_query_arg( array( '_wp_http_referer', '_wpnonce', 'action', 'action2', 'order_id', 'customer_message', 'customer_message2' ), stripslashes( $_SERVER['REQUEST_URI'] ) );
+		}
+
+		wp_redirect( esc_url_raw( add_query_arg( 'message', $message_nonce, $redirect_url ) ) );
+		exit;
 	}
 }
 

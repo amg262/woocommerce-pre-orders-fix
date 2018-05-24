@@ -11,20 +11,30 @@
 /**
  * Customer pre-order available notification email
  *
- * @since 1.0
+ * @since 1.0.0
+ * @version 1.5.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly ?>
 
-<?php do_action( 'woocommerce_email_header', $email_heading ); ?>
+<?php do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 
-<?php if ( 'pending' == $order->status ) : ?>
+<?php
+$pre_wc_30 = version_compare( WC_VERSION, '3.0', '<' );
+$billing_email = $pre_wc_30 ? $order->billing_email : $order->get_billing_email();
+$billing_phone = $pre_wc_30 ? $order->billing_phone : $order->get_billing_phone();
 
-	<p><?php printf( __( "Your pre-order is now available, but requires payment. %sPlease pay for your pre-order now.%s", 'wc-pre-orders' ), '<a href="' . $order->get_checkout_payment_url() . '">', '</a>' ); ?></p>
+if ( 'pending' === $order->get_status() && ! WC_Pre_Orders_Manager::is_zero_cost_order( $order ) ) : ?>
 
-<?php elseif ( 'failed' == $order->status || 'on-hold' == $order->status ) : ?>
+	<p><?php
+/* translators: 1: href link for checkout payment url 2: closing href link */
+printf( __( "Your pre-order is now available, but requires payment. %sPlease pay for your pre-order now.%s", 'wc-pre-orders' ), '<a href="' . $order->get_checkout_payment_url() . '">', '</a>' ); ?></p>
 
-	<p><?php printf( __( "Your pre-order is now available, but automatic payment failed. %sPlease update your payment information now.%s", 'wc-pre-orders' ), '<a href="' . $order->get_checkout_payment_url() . '">', '</a>' ); ?></p>
+<?php elseif ( 'failed' === $order->get_status() || 'on-hold' === $order->get_status() ) : ?>
+
+	<p><?php
+/* translators: 1: href link for checkout payment url 2: closing href link */
+printf( __( "Your pre-order is now available, but automatic payment failed. %sPlease update your payment information now.%s", 'wc-pre-orders' ), '<a href="' . $order->get_checkout_payment_url() . '">', '</a>' ); ?></p>
 
 <?php else : ?>
 
@@ -36,7 +46,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly ?>
 	<blockquote><?php echo wpautop( wptexturize( $message ) ); ?></blockquote>
 <?php endif; ?>
 
-<?php do_action( 'woocommerce_email_before_order_table', $order, false, $plain_text ); ?>
+<?php do_action( 'woocommerce_email_before_order_table', $order, false, $plain_text, $email ); ?>
 
 <h2><?php echo __( 'Order:', 'wc-pre-orders' ) . ' ' . $order->get_order_number(); ?></h2>
 
@@ -49,7 +59,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly ?>
 		</tr>
 	</thead>
 	<tbody>
-		<?php echo $order->email_order_items_table( $order->is_download_permitted(), true, $order->status == 'processing' ? true : false ); ?>
+		<?php echo $pre_wc_30 ? $order->email_order_items_table() : wc_get_email_order_items( $order ); ?>
 	</tbody>
 	<tfoot>
 		<?php
@@ -67,19 +77,19 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly ?>
 	</tfoot>
 </table>
 
-<?php do_action( 'woocommerce_email_after_order_table', $order, false, $plain_text ); ?>
+<?php do_action( 'woocommerce_email_after_order_table', $order, false, $plain_text, $email ); ?>
 
-<?php do_action( 'woocommerce_email_order_meta', $order, false, $plain_text ); ?>
+<?php do_action( 'woocommerce_email_order_meta', $order, false, $plain_text, $email ); ?>
 
 <h2><?php _e( 'Customer details', 'wc-pre-orders' ); ?></h2>
 
-<?php if ( $order->billing_email ) : ?>
-	<p><strong><?php _e( 'Email:', 'wc-pre-orders' ); ?></strong> <?php echo $order->billing_email; ?></p>
+<?php if ( $billing_email ) : ?>
+	<p><strong><?php _e( 'Email:', 'wc-pre-orders' ); ?></strong> <?php echo $billing_email; ?></p>
 <?php endif; ?>
-<?php if ( $order->billing_phone ) : ?>
-	<p><strong><?php _e( 'Tel:', 'wc-pre-orders' ); ?></strong> <?php echo $order->billing_phone; ?></p>
+<?php if ( $billing_phone ) : ?>
+	<p><strong><?php _e( 'Tel:', 'wc-pre-orders' ); ?></strong> <?php echo $billing_phone; ?></p>
 <?php endif; ?>
 
-<?php woocommerce_get_template( 'emails/email-addresses.php', array( 'order' => $order ) ); ?>
+<?php wc_get_template( 'emails/email-addresses.php', array( 'order' => $order ) ); ?>
 
-<?php do_action( 'woocommerce_email_footer' ); ?>
+<?php do_action( 'woocommerce_email_footer', $email ); ?>

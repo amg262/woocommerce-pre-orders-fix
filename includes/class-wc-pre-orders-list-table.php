@@ -205,7 +205,7 @@ class WC_Pre_Orders_List_Table extends WP_List_Table {
 	 * @return string the checkbox column content
 	 */
 	public function column_cb( $order ) {
-		return '<input type="checkbox" name="order_id[]" value="' . $order->id . '" />';
+		return '<input type="checkbox" name="order_id[]" value="' . ( version_compare( WC_VERSION, '3.0', '<' ) ? $order->id : $order->get_id() ) . '" />';
 	}
 
 	/**
@@ -219,18 +219,27 @@ class WC_Pre_Orders_List_Table extends WP_List_Table {
 	 * @return string the column content
 	 */
 	public function column_default( $order, $column_name ) {
+		$order_id = version_compare( WC_VERSION, '3.0', '<' ) ? $order->id : $order->get_id();
 
 		switch ( $column_name ) {
 
 			case 'status':
 				$actions = array();
 
-				// base action url
-				$action_url = esc_url( add_query_arg( 'order_id[]', $order->id ) );
-
 				// determine any available actions
 				if ( WC_Pre_Orders_Manager::can_pre_order_be_changed_to( 'cancelled', $order ) ) {
-					$actions['cancel'] = sprintf( '<a href="%s">%s</a>', add_query_arg( 'action', 'cancel', $action_url ), __( 'Cancel', 'wc-pre-orders' ) );
+					$item = WC_Pre_Orders_Order::get_pre_order_item( $order );
+					$product_id = $item['product_id'];
+
+					$cancel_url = add_query_arg(
+						array(
+							'order_id' => $order_id,
+							'action'   => 'cancel_pre_order',
+						)
+					);
+					$cancel_url = wp_nonce_url( $cancel_url, 'cancel_pre_order', 'cancel_pre_order_nonce' );
+
+					$actions['cancel'] = sprintf( '<a href="%s">%s</a>', esc_url( $cancel_url ), esc_html__( 'Cancel', 'wc-pre-orders' ) );
 				}
 
 				$column_content = sprintf( '<mark class="%s tips" data-tip="%s">%s</mark>', WC_Pre_Orders_Order::get_pre_order_status( $order ), WC_Pre_Orders_Order::get_pre_order_status_to_display( $order ), WC_Pre_Orders_Order::get_pre_order_status_to_display( $order ) );
@@ -238,11 +247,14 @@ class WC_Pre_Orders_List_Table extends WP_List_Table {
 			break;
 
 			case 'customer':
+				$billing_email = version_compare( WC_VERSION, '3.0', '<' ) ? $order->billing_email : $order->get_billing_email();
+				$user_id = version_compare( WC_VERSION, '3.0', '<' ) ? $order->user_id : $order->get_customer_id();
 
-				if ( 0 !== $order->user_id )
-					$column_content = sprintf( '<a href="%s">%s</a>', get_edit_user_link( $order->user_id ), $order->billing_email );
-				else
-					$column_content = $order->billing_email;
+				if ( 0 !== $user_id ) {
+					$column_content = sprintf( '<a href="%s">%s</a>', get_edit_user_link( $user_id ), $billing_email );
+				} else {
+					$column_content = $billing_email;
+				}
 
 			break;
 
@@ -253,11 +265,11 @@ class WC_Pre_Orders_List_Table extends WP_List_Table {
 			break;
 
 			case 'order':
-				$column_content = sprintf( '<a href="%s">%s</a>', get_edit_post_link( $order->id ), sprintf( __( 'Order %s', 'wc-pre-orders' ), $order->get_order_number() ) );
+				$column_content = sprintf( '<a href="%s">%s</a>', get_edit_post_link( $order_id ), sprintf( __( 'Order %s', 'wc-pre-orders' ), $order->get_order_number() ) );
 			break;
 
 			case 'order_date':
-				$column_content = date_i18n( woocommerce_date_format(), strtotime( $order->order_date ) );
+				$column_content = date_i18n( wc_date_format(), strtotime( version_compare( WC_VERSION, '3.0', '<' ) ? $order->order_date : ( $order->get_date_created() ? gmdate( 'Y-m-d H:i:s', $order->get_date_created()->getOffsetTimestamp() ) : '' ) ) );
 			break;
 
 			case 'availability_date':
@@ -572,19 +584,13 @@ class WC_Pre_Orders_List_Table extends WP_List_Table {
 			<select id="dropdown_products" name="_product">
 				<option value=""><?php _e( 'Show all Products', 'wc-pre-orders' ) ?></option>
 				<?php
-					if ( ! empty( $_GET['_product'] ) ) {
-						$product = get_product( absint( $_GET['_product'] ) );
-
-						if ( method_exists( $product, 'get_formatted_name' ) ) {
-							$product_name = $product->get_formatted_name();
-						} else {
-							$product_name = woocommerce_get_formatted_product_name( $product );
-						}
-
-						echo '<option value="' . absint( $product->id ) . '" ';
-						selected( 1, 1 );
-						echo '>' . esc_html( $product_name ) . '</option>';
-					}
+				if ( ! empty( $_GET['_product'] ) ) {
+					$product = wc_get_product( absint( $_GET['_product'] ) );
+					$product_name = $product->get_formatted_name();
+					echo '<option value="' . absint( $product->get_id() ) . '" ';
+					selected( 1, 1 );
+					echo '>' . esc_html( $product_name ) . '</option>';
+				}
 				?>
 			</select>
 
@@ -602,15 +608,36 @@ class WC_Pre_Orders_List_Table extends WP_List_Table {
 				$product_id   = '';
 				if ( ! empty( $_GET['_product'] ) ) {
 					$product_id   = absint( $_GET['_product'] );
-					$product      = get_product( $product_id );
+					$product      = wc_get_product( $product_id );
 					$product_name = $product->get_formatted_name();
 				}
-			?>
-				<input type="hidden" id="dropdown_customers" class="wc-customer-search" name="_customer_user" data-placeholder="<?php _e( 'Search for a customer&hellip;', 'wc-pre-orders' ); ?>" data-selected="<?php echo esc_attr( $user_string ); ?>" value="<?php echo $user_id; ?>" data-allow_clear="true" style="width: 250px;" />
 
-				<input type="hidden" id="dropdown_products" class="wc-product-search" name="_product" data-placeholder="<?php _e( 'Search for a product&hellip;', 'wc-pre-orders' ); ?>" data-selected="<?php echo esc_attr( $product_name ); ?>" value="<?php echo $product_id; ?>" data-allow_clear="true" style="width: 250px;" />
+				if ( version_compare( WC_VERSION, '3.0.0', '>=' ) ) {
+			?>
+					<select id="dropdown_customers" style="width: 250px;" class="wc-customer-search" name="_customer_user" data-placeholder="<?php esc_attr_e( 'Search for a customer&hellip;', 'wc-pre-orders' ); ?>">
+						<?php
+							if ( ! empty( $_GET['_customer_user'] ) ) {
+								echo '<option value="' . esc_attr( $user_id ) . '">' . wp_kses_post( $user_string ) . '</option>';						
+							}
+						?>
+					</select>
+				<?php } else { ?>
+					<input type="hidden" id="dropdown_customers" class="wc-customer-search" name="_customer_user" data-placeholder="<?php _e( 'Search for a customer&hellip;', 'wc-pre-orders' ); ?>" data-selected="<?php echo esc_attr( $user_string ); ?>" value="<?php echo $user_id; ?>" data-allow_clear="true" style="width: 250px;" />
+				<?php } ?>
+
+				<?php if ( version_compare( WC_VERSION, '3.0.0', '>=' ) ) { ?>
+					<select id="dropdown_products" class="wc-product-search" style="width: 250px;" name="_product" data-placeholder="<?php esc_attr_e( 'Search for a product&hellip;', 'wc-pre-orders' ); ?>" data-action="woocommerce_json_search_products_and_variations">
+						<?php
+							if ( ! empty( $_GET['_product'] ) ) {
+								echo '<option value="' . esc_attr( $product_id ) . '">' . wp_kses_post( $product_name ) . '</option>';						
+							}
+						?>
+					</select>
+				<?php } else { ?>
+					<input type="hidden" id="dropdown_products" class="wc-product-search" name="_product" data-placeholder="<?php _e( 'Search for a product&hellip;', 'wc-pre-orders' ); ?>" data-selected="<?php echo esc_attr( $product_name ); ?>" value="<?php echo $product_id; ?>" data-allow_clear="true" style="width: 250px;" />
 
 				<?php
+				}
 			}
 
 			$this->render_availability_dates_dropdown();

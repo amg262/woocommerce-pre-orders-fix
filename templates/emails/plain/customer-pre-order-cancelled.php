@@ -16,6 +16,10 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
+$pre_wc_30 = version_compare( WC_VERSION, '3.0', '<' );
+$billing_email = $pre_wc_30 ? $order->billing_email : $order->get_billing_email();
+$billing_phone = $pre_wc_30 ? $order->billing_phone : $order->get_billing_phone();
+
 echo $email_heading . "\n\n";
 
 echo __( 'Your pre-order has been cancelled. Your order details are shown below for your reference.', 'wc-pre-orders' ) . "\n\n";
@@ -30,14 +34,16 @@ endif;
 
 echo "****************************************************\n\n";
 
-do_action( 'woocommerce_email_before_order_table', $order, false, $plain_text );
+do_action( 'woocommerce_email_before_order_table', $order, false, $plain_text, $email );
 
+/* translators: 1: order number */
 echo sprintf( __( 'Order number: %s', 'wc-pre-orders' ), $order->get_order_number() ) . "\n";
-echo sprintf( __( 'Order date: %s', 'wc-pre-orders' ), date_i18n( woocommerce_date_format(), strtotime( $order->order_date ) ) ) . "\n";
+/* translators: 1: order date */
+echo sprintf( __( 'Order date: %s', 'wc-pre-orders' ), date_i18n( wc_date_format(), strtotime( $pre_wc_30 ? $order->order_date : ( $order->get_date_created() ? gmdate( 'Y-m-d H:i:s', $order->get_date_created()->getOffsetTimestamp() ) : '' ) ) ) ) . "\n";
 
 do_action( 'woocommerce_email_order_meta', $order, false, $plain_text );
 
-echo "\n" . $order->email_order_items_table( false, true, false, '', '', true );
+echo "\n" . ( $pre_wc_30 ? $order->email_order_items_table( array( 'plain_text' => true ) ) : wc_get_email_order_items( $order, array( 'plain_text' => true ) ) );
 
 echo "----------\n\n";
 
@@ -49,17 +55,19 @@ if ( $totals = $order->get_order_item_totals() ) {
 
 echo "\n****************************************************\n\n";
 
-do_action( 'woocommerce_email_after_order_table', $order, false, $plain_text );
+do_action( 'woocommerce_email_after_order_table', $order, false, $plain_text, $email );
 
 echo __( 'Your details', 'wc-pre-orders' ) . "\n\n";
 
-if ( $order->billing_email )
-	echo __( 'Email:', 'wc-pre-orders' ); echo $order->billing_email. "\n";
-
-if ( $order->billing_phone )
-	echo __( 'Tel:', 'wc-pre-orders' ); ?> <?php echo $order->billing_phone. "\n";
-
-woocommerce_get_template( 'emails/plain/email-addresses.php', array( 'order' => $order ) );
+if ( $billing_email ) {
+	echo __( 'Email:', 'wc-pre-orders' );
+	echo $billing_email . "\n";
+}
+if ( $billing_phone ) {
+	echo __( 'Tel:', 'wc-pre-orders' );
+	echo $billing_phone . "\n";
+}
+wc_get_template( 'emails/plain/email-addresses.php', array( 'order' => $order ) );
 
 echo "\n****************************************************\n\n";
 

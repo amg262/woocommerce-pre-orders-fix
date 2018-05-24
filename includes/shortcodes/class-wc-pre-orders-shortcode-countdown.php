@@ -84,15 +84,16 @@ class WC_Pre_Orders_Shortcode_Countdown {
 
 		// product by id?
 		if ( $product_id )
-			$product = get_product( $product_id );
+			$product = wc_get_product( $product_id );
 
 		// date override (convert from string unless someone was savvy enough to provide a timestamp)
 		if ( $until && ! is_numeric( $until ) )
 			$until = strtotime( $until );
 
 		// product and no date override, get the datetime from the product, if there is one
-		if ( $product && ! $until )
-			$until = ( $product->wc_pre_orders_availability_datetime ) ? $product->wc_pre_orders_availability_datetime : 0;
+		if ( $product && ! $until ) {
+			$until = get_post_meta( $product->get_id(), '_wc_pre_orders_availability_datetime', true );
+		}
 
 		// can't do anything without an 'until' date
 		if ( ! $until ) return;
@@ -110,7 +111,7 @@ class WC_Pre_Orders_Shortcode_Countdown {
 		$('#woocommerce-pre-orders-countdown-<?php echo $until; ?>').countdown({
 		  until: new Date(<?php echo $until * 1000; ?>),
 		  layout: '<?php echo $layout; ?>',
-		  'format': '<?php echo $format; ?>',
+		  format: '<?php echo $format; ?>',
 		  compact: <?php echo $compact; ?>,
 		  expiryUrl: location.href,
 		});
@@ -123,7 +124,7 @@ class WC_Pre_Orders_Shortcode_Countdown {
 		}
 
 		// the countdown element with a unique identifier to allow multiple countdowns on the same page, and common class for ease of styling
-		echo '<div class="woocommerce-pre-orders-countdown" id="woocommerce-pre-orders-countdown-' . $until . '"></div>';
+		echo '<div class="woocommerce-pre-orders-countdown" id="woocommerce-pre-orders-countdown-' . esc_attr( $until ) . '"></div>';
 	}
 
 

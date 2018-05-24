@@ -22,10 +22,10 @@ class WC_Pre_Orders_Admin_Products {
 	 */
 	public function __construct() {
 		// Add 'Pre-Orders' product writepanel tab.
-		add_action( 'woocommerce_product_write_panel_tabs', array( $this, 'add_product_tab' ), 11 );
+		add_action( 'woocommerce_product_data_tabs', array( __CLASS__, 'product_data_tab' ) );
 
 		// Add 'Pre-Orders' tab content
-		add_action( 'woocommerce_product_write_panels', array( $this, 'add_product_tab_options' ), 11 );
+		add_action( 'woocommerce_product_data_panels', array( $this, 'add_product_tab_options' ), 11 );
 
 		// Save 'Pre-Orders' product options.
 		$product_types = WC_Pre_Orders::get_supported_product_types();
@@ -38,9 +38,33 @@ class WC_Pre_Orders_Admin_Products {
 	 * Add 'Pre-Orders' tab to product writepanel.
 	 */
 	public function add_product_tab() {
-		echo '<li class="wc_pre_orders_tab wc_pre_orders_options"><a href="#wc_pre_orders_data">' . __( 'Pre-Orders', 'wc-pre-orders' ) . '</a></li>';
+		_deprecated_function( __METHOD__ . '()', '1.5.9', __CLASS__ . '::product_data_tab()' );
 	}
 
+	/**
+	 * Add 'Pre-Orders' tab to product writepanel.
+	 *
+	 * @param  array $tabs
+	 * @return array
+	 */
+	public static function product_data_tab( $tabs ) {
+
+		$supported_types = WC_Pre_Orders::get_supported_product_types();
+
+		$classes = array( 'wc_pre_orders_tab', 'wc_pre_orders_options' );
+
+		foreach ( $supported_types as $product_type ) {
+			$classes[] = 'show_if_' . $product_type;
+		}
+
+		$tabs['pre_orders'] = array(
+			'label'  => __( 'Pre-Orders', 'wc-pre-orders' ),
+			'target' => 'wc_pre_orders_data',
+			'class'  => $classes
+		);
+
+		return $tabs;
+	}
 
 	/**
 	 * Add pre-orders options to product writepanel.
@@ -106,6 +130,8 @@ class WC_Pre_Orders_Admin_Products {
 		// Pre-order fee.
 		if ( isset( $_POST['_wc_pre_orders_fee'] ) && is_numeric( $_POST['_wc_pre_orders_fee'] ) ) {
 			update_post_meta( $post_id, '_wc_pre_orders_fee', $_POST['_wc_pre_orders_fee'] );
+		} else {
+			update_post_meta( $post_id, '_wc_pre_orders_fee', '' );
 		}
 
 		// When to charge pre-order amount.

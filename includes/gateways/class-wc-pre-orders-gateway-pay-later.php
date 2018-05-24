@@ -75,7 +75,7 @@ class WC_Pre_Orders_Gateway_Pay_Later extends WC_Payment_Gateway {
 		if ( function_exists( 'is_checkout_pay_page' ) ) {
 			$pay_page = is_checkout_pay_page();
 		} else {
-			$pay_page = is_page( woocommerce_get_page_id( 'pay' ) );
+			$pay_page = is_page( wc_get_page_id( 'pay' ) );
 		}
 
 		// On checkout page
@@ -144,18 +144,24 @@ class WC_Pre_Orders_Gateway_Pay_Later extends WC_Payment_Gateway {
 	 * @return array
 	 */
 	public function process_payment( $order_id ) {
-		global $woocommerce;
-
-		$order = new WC_Order( $order_id );
-
-		// Reduce stock levels
-		$order->reduce_order_stock();
+		$order     = new WC_Order( $order_id );
+		$is_pre_30 = version_compare( WC_VERSION, '3.0', '<' );
 
 		// Remove cart
-		$woocommerce->cart->empty_cart();
+		WC()->cart->empty_cart();
 
 		// Update status
 		$order->update_status( 'pre-ordered' );
+
+		// Add a flag the order used pay later.
+		if ( $is_pre_30 ) {
+			update_post_meta( $order_id, '_wc_pre_orders_is_pay_later', 'yes' );
+		} else {
+			$order->update_meta_data( '_wc_pre_orders_is_pay_later', 'yes' );
+			$order->save();
+		}
+
+		$is_pre_30 ? $order->reduce_order_stock() : wc_reduce_stock_levels( $order_id );
 
 		// Redirect to thank you page
 		return array(

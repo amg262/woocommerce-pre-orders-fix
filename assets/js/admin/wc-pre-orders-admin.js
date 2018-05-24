@@ -23,9 +23,11 @@ jQuery( document ).ready( function( $ ) {
 	if ( $actionEmailMessage.length ) {
 		$( 'input[name="wc_pre_orders_action_enable_email_notification"]').change( function() {
 			if ( ! $( this ).is( ':checked' ) ) {
+				$actionEmailMessage.removeAttr( 'required' );
 				$actionEmailMessage.closest( 'tr' ).hide();
 			} else {
 				$actionEmailMessage.closest( 'tr' ).show();
+				$actionEmailMessage.attr( 'required', 'required' );
 			}
 		}).change();
 	}

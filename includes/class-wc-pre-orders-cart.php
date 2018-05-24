@@ -8,10 +8,9 @@
  * @license     http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0
  */
 
-if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
-
-include_once __DIR__."/WooSession.php";
-include_once __DIR__."/WooAction.php";
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+} // Exit if accessed directly
 
 /**
  * Pre-Orders Cart class
@@ -31,100 +30,154 @@ class WC_Pre_Orders_Cart {
 	 */
 	public function __construct() {
 
-	    global $woo_multi;
-        global $woo_objs;
-		global $woo_session;
-
-		//include('WooSession.php');
-
-		$woo_session = \WooPreOrderFix\WooSession::getInstance();
-        //$woo_session::getInstance()->verify_session();
-		//var_dump($woo_session);
-
 		// Remove other products from the cart when adding a pre-order
-		add_filter( 'woocommerce_add_to_cart_validation', array( $this, 'validate_cart' ), 15, 2 );
+		add_filter( 'woocommerce_add_to_cart_validation', [ $this, 'validate_cart' ], 15, 2 );
 
 		// Maybe add pre-order fees when calculating totals
-		add_action( 'woocommerce_cart_calculate_fees', array( $this, 'maybe_add_pre_order_fee' ) );
+		add_action( 'woocommerce_cart_calculate_fees', [ $this, 'maybe_add_pre_order_fee' ] );
 
 		// Modify formatted totals
-		add_filter( 'woocommerce_cart_total', array( $this, 'get_formatted_cart_total' ) );
+		add_filter( 'woocommerce_cart_total', [ $this, 'get_formatted_cart_total' ] );
 
 		// Modify line item display in cart/checkout to show availability date/time
-		add_filter( 'woocommerce_get_item_data', array( $this, 'get_item_data' ), 10, 2 );
+		add_filter( 'woocommerce_get_item_data', [ $this, 'get_item_data' ], 10, 2 );
 
 	}
+
 
 	/**
 	 * Get the order total formatted to show when the order will be charged
 	 *
 	 * @since 1.0
+	 *
 	 * @param string $total price string ( note: this is already formatted by woocommerce_price() )
+	 *
 	 * @return string the formatted order total price string
 	 */
 	public function get_formatted_cart_total( $total ) {
 
 		// this check prevents a formatted total from display anywhere but the cart/checkout page
-		if ( $this->cart_contains_pre_order() )
+		if ( $this->cart_contains_pre_order() ) {
 			$total = WC_Pre_Orders_Manager::get_formatted_pre_order_total( $total, self::get_pre_order_product() );
+		}
 
 		return $total;
 	}
 
+	/**
+	 * Checks if the current cart contains a product with pre-orders enabled
+	 *
+	 * @since 1.0
+	 * @return bool true if the cart contains a pre-order, false otherwise
+	 */
+	public static function cart_contains_pre_order() {
+
+		global $woocommerce;
+
+		$contains_pre_order = false;
+
+		if ( ! empty( $woocommerce->cart->cart_contents ) ) {
+
+			foreach ( $woocommerce->cart->cart_contents as $cart_item ) {
+
+				if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $cart_item['product_id'] ) ) {
+
+					$contains_pre_order = true;
+					break;
+				}
+			}
+		}
+
+		return $contains_pre_order;
+	}
+
+	/**
+	 * Since a cart may only contain a single pre-ordered product, this returns the pre-ordered product object or
+	 * null if the cart does not contain a pre-order
+	 *
+	 * @since 1.0
+	 * @return object|null the pre-ordered product object, or null if the cart does not contain a pre-order
+	 */
+	public static function get_pre_order_product() {
+
+		global $woocommerce;
+
+		if ( self::cart_contains_pre_order() ) {
+
+			foreach ( $woocommerce->cart->cart_contents as $cart_item ) {
+
+				if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $cart_item['product_id'] ) ) {
+
+					// return the product object
+					return wc_get_product( $cart_item['variation_id'] ? $cart_item['variation_id'] : $cart_item['product_id'] );
+				}
+			}
+
+		} else {
+
+			// cart doesn't contain pre-order
+			return null;
+		}
+	}
 
 	/**
 	 * Get item data to display on cart/checkout pages that shows the availability date of the pre-order
 	 *
 	 * @since 1.0
+	 *
 	 * @param array $item_data any existing item data
 	 * @param array $cart_item the cart item
+	 *
 	 * @return array
 	 */
 	public function get_item_data( $item_data, $cart_item ) {
 
 		// only modify pre-orders on cart/checkout page
-		if ( ! $this->cart_contains_pre_order() )
+		if ( ! $this->cart_contains_pre_order() ) {
 			return $item_data;
+		}
 
 		// get title text
 		$name = get_option( 'wc_pre_orders_availability_date_cart_title_text' );
 
 		// don't add if empty
-		if ( ! $name )
+		if ( ! $name ) {
 			return $item_data;
+		}
 
-		$pre_order_meta = apply_filters( 'wc_pre_orders_cart_item_meta', array(
+		$pre_order_meta = apply_filters( 'wc_pre_orders_cart_item_meta', [
 			'name'    => $name,
 			'display' => WC_Pre_Orders_Product::get_localized_availability_date( $cart_item['data'] ),
-		), $cart_item );
+		], $cart_item );
 
 		// add title and localized date
-		if ( ! empty( $pre_order_meta ) )
+		if ( ! empty( $pre_order_meta ) ) {
 			$item_data[] = $pre_order_meta;
+		}
 
 		return $item_data;
 	}
-
 
 	/**
 	 * When a pre-order is added to the cart, remove any other products
 	 *
 	 * @since 1.0
+	 *
 	 * @param bool $valid
-	 * @param $product_id
+	 * @param      $product_id
+	 *
 	 * @return bool
 	 */
 	public function validate_cart( $valid, $product_id ) {
+
 		global $woocommerce;
 
-
-
-		/*if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $product_id ) ) {
+		if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $product_id ) ) {
 
 			// if a pre-order product is being added to cart, check if the cart already contains other products and empty it if it does
-			if( $woocommerce->cart->get_cart_contents_count() >= 1 ) {
+			if ( $woocommerce->cart->get_cart_contents_count() >= 1 ) {
 
-				$woocommerce->cart->empty_cart();
+				//$woocommerce->cart->empty_cart();
 
 				$string = __( 'Your previous cart was emptied because pre-orders must be purchased separately.', 'wc-pre-orders' );
 
@@ -153,14 +206,10 @@ class WC_Pre_Orders_Cart {
 
 				$valid = false;
 			}
-		}*/
+		}
 
-		$var = $this->cart_contains_pre_order();
-
-        //var_dump($var);
 		return $valid;
 	}
-
 
 	/**
 	 * Add any applicable pre-order fees when calculating totals
@@ -168,6 +217,7 @@ class WC_Pre_Orders_Cart {
 	 * @since 1.0
 	 */
 	public function maybe_add_pre_order_fee() {
+
 		global $woocommerce;
 
 		// Only add pre-order fees if the cart contains a pre-order
@@ -189,104 +239,16 @@ class WC_Pre_Orders_Cart {
 			return;
 		}
 
-		$fee = apply_filters( 'wc_pre_orders_fee', array(
-			'label' => __( 'Pre-Order Fee', 'wc-pre-orders' ),
-			'amount' => $amount,
-			'tax_status' => WC_Pre_Orders_Product::get_pre_order_fee_tax_status( $product ), // pre order fee inherits tax status of product
-		) );
+		$fee = apply_filters( 'wc_pre_orders_fee', [
+			'label'      => __( 'Pre-Order Fee', 'wc-pre-orders' ),
+			'amount'     => $amount,
+			'tax_status' => WC_Pre_Orders_Product::get_pre_order_fee_tax_status( $product ),
+			// pre order fee inherits tax status of product
+		] );
 
 		// Add fee
 		$woocommerce->cart->add_fee( $fee['label'], $fee['amount'], $fee['tax_status'] );
 	}
-
-
-	/**
-	 * Checks if the current cart contains a product with pre-orders enabled
-	 *
-	 * @since 1.0
-	 * @return bool true if the cart contains a pre-order, false otherwise
-	 */
-	public static function cart_contains_pre_order() {
-		global $woocommerce;
-        global $woo_multi;
-        global $woo_objs;
-        global $woo_session;
-
-        $woo_session = \WooPreOrderFix\WooSession::getInstance();
-        $woo_session::getInstance()->clear_item_array();
-		$woo_multi = array();
-        //add_option('woo_multi', array());
-        //add_option('woo_objs', array());
-        //$woo_multi = get_option('woo_multi');
-
-        $i = 0;
-        $j = 0;
-
-		$contains_pre_order = false;
-
-		if ( ! empty( $woocommerce->cart->cart_contents ) ) {
-
-			foreach ( $woocommerce->cart->cart_contents as $cart_item ) {
-
-				if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $cart_item['product_id'] ) ) {
-                    $i++;
-					$contains_pre_order = true;
-
-                    if ($i === 1) {
-                        $is_first = true;
-                    } else {
-                        $is_first = null;
-                    }
-
-                    $item = array(
-                            'id' =>  $i,
-                            'prod_id' => $cart_item['product_id'],
-                            'var_id' => $cart_item['variation_id'],
-                            'qty' => $cart_item['quantity'],
-                            'is_first' => $is_first);
-
-
-                    $woo_session::getInstance()->add_item_to_array($item);
-
-                    /*if ($i > 1) {
-
-                        $item = array(
-                            'id' =>  $i,
-                            'prod_id' => $cart_item['product_id'],
-                            'var_id' => $cart_item['variation_id'],
-                            'qty' => $cart_item['quantity'],
-                            'is_first' => 'false');
-
-                    	//array_push($woo_multi, array($i => $cart_item ));
-                        //update_option('woo_multi', array($i => $cart_item));
-                        //$woo_multi['items'][$i] = $cart_item;
-
-	                    $_SESSION['cart_count'] = $i;
-	                    $_SESSION['cart_items'] = $woo_multi;
-                        $_SESSION['cart_live'] = 'true';
-
-                    }*/
-
-
-
-				}
-			}
-		}
-
-        //$_SESSION['cart_items'] = $woo_session::getInstance()->output_item_array();
-		//var_dump($_SESSION);
-		//print $_SESSION['cart_count'];
-
-		//var_dump(count($_SESSION['cart_items']));
-        //echo $i . '-items';
-        //print 'ECHO-'.count($woo_session::getInstance()->output_item_array());
-        //var_dump($woo_session::getInstance()->output_item_array());
-
-        //var_dump(get_option('woo_multi'));
-        //var_dump($woo_multi);
-		return $contains_pre_order;
-	}
-
 
 	/**
 	 * Checks if the current cart contains a pre-order fee
@@ -295,44 +257,17 @@ class WC_Pre_Orders_Cart {
 	 * @return bool true if the cart contains a pre-order fee, false otherwise
 	 */
 	public static function cart_contains_pre_order_fee() {
+
 		global $woocommerce;
 
 		foreach ( $woocommerce->cart->get_fees() as $fee ) {
 
-			if ( is_object( $fee ) && 'pre-order-fee' == $fee->id )
+			if ( is_object( $fee ) && 'pre-order-fee' == $fee->id ) {
 				return true;
+			}
 		}
 
 		return false;
-	}
-
-
-	/**
-	 * Since a cart may only contain a single pre-ordered product, this returns the pre-ordered product object or
-	 * null if the cart does not contain a pre-order
-	 *
-	 * @since 1.0
-	 * @return object|null the pre-ordered product object, or null if the cart does not contain a pre-order
-	 */
-	public static function get_pre_order_product() {
-		global $woocommerce;
-
-		if ( self::cart_contains_pre_order() ) {
-
-			foreach ( $woocommerce->cart->cart_contents as $cart_item ) {
-
-				if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $cart_item['product_id'] ) ) {
-
-					// return the product object
-					return get_product( $cart_item['variation_id'] ? $cart_item['variation_id'] : $cart_item['product_id'] );
-				}
-			}
-
-		} else {
-
-			// cart doesn't contain pre-order
-			return null;
-		}
 	}
 
 

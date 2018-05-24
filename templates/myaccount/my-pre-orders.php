@@ -10,7 +10,9 @@
  */
 ?>
 
-<h2><?php _e( 'My Pre-Orders', 'wc-pre-orders' ); ?></h2>
+<?php if ( $show_title ) : ?>
+	<h2><?php _e( 'My Pre-Orders', 'wc-pre-orders' ); ?></h2>
+<?php endif; ?>
 
 <?php if ( ! empty( $items ) ) : ?>
 	<table class="shop_table my_account_pre_orders my_account_orders">
@@ -28,6 +30,7 @@
 		<tbody>
 			<?php foreach ( $items as $item ) :
 					$order = $item['order'];
+					$order_id = version_compare( WC_VERSION, '3.0', '<' ) ? $order->id : $order->get_id();
 					$data  = $item['data'];
 				?>
 				<tr class="order">
@@ -37,7 +40,7 @@
 								#<?php echo $order->get_order_number(); ?>
 							</a>
 						<?php else : ?>
-							<a href="<?php echo esc_url( add_query_arg( 'order', $order->id, get_permalink( woocommerce_get_page_id( 'view_order' ) ) ) ); ?>">
+							<a href="<?php echo esc_url( add_query_arg( 'order', $order_id, get_permalink( wc_get_page_id( 'view_order' ) ) ) ); ?>">
 								<?php echo $order->get_order_number(); ?>
 							</a>
 						<?php endif; ?>
@@ -54,7 +57,7 @@
 						<?php echo WC_Pre_Orders_Product::get_localized_availability_date( $data['product_id'] ); ?>
 					</td>
 					<td class="pre-order-actions order-actions">
-						<?php foreach( $actions[ $order->id ] as $key => $action ) : ?>
+						<?php foreach( $actions[ $order_id ] as $key => $action ) : ?>
 						<a href="<?php echo esc_url( $action['url'] ); ?>" class="button <?php echo sanitize_html_class( $key ) ?>"><?php echo esc_html( $action['name'] ); ?></a>
 						<?php endforeach; ?>
 					</td>

@@ -16,15 +16,20 @@
 
 if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly ?>
 
-<?php do_action( 'woocommerce_email_header', $email_heading ); ?>
+<?php do_action( 'woocommerce_email_header', $email_heading, $email ); ?>
 
-<p><?php _e( 'Your pre-order has been cancelled. Your order details are shown below for your reference.', 'wc-pre-orders' ); ?></p>
+<p><?php
+$pre_wc_30 = version_compare( WC_VERSION, '3.0', '<' );
+$billing_email = $pre_wc_30 ? $order->billing_email : $order->get_billing_email();
+$billing_phone = $pre_wc_30 ? $order->billing_phone : $order->get_billing_phone();
+
+_e( 'Your pre-order has been cancelled. Your order details are shown below for your reference.', 'wc-pre-orders' ); ?></p>
 
 <?php if ( $message ) : ?>
 <blockquote><?php echo wpautop( wptexturize( $message ) ); ?></blockquote>
 <?php endif; ?>
 
-<?php do_action( 'woocommerce_email_before_order_table', $order, false, $plain_text ); ?>
+<?php do_action( 'woocommerce_email_before_order_table', $order, false, $plain_text, $email ); ?>
 
 <h2><?php echo __( 'Order:', 'wc-pre-orders' ) . ' ' . $order->get_order_number(); ?></h2>
 
@@ -37,7 +42,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly ?>
 		</tr>
 	</thead>
 	<tbody>
-		<?php echo $order->email_order_items_table( false, true ); ?>
+		<?php echo $pre_wc_30 ? $order->email_order_items_table() : wc_get_email_order_items( $order ); ?>
 	</tbody>
 	<tfoot>
 		<?php
@@ -55,19 +60,19 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly ?>
 	</tfoot>
 </table>
 
-<?php do_action( 'woocommerce_email_after_order_table', $order, false, $plain_text ); ?>
+<?php do_action( 'woocommerce_email_after_order_table', $order, false, $plain_text, $email ); ?>
 
-<?php do_action( 'woocommerce_email_order_meta', $order, false, $plain_text ); ?>
+<?php do_action( 'woocommerce_email_order_meta', $order, false, $plain_text, $email ); ?>
 
 <h2><?php _e( 'Customer details', 'wc-pre-orders' ); ?></h2>
 
-<?php if ( $order->billing_email ) : ?>
-	<p><strong><?php _e( 'Email:', 'wc-pre-orders' ); ?></strong> <?php echo $order->billing_email; ?></p>
+<?php if ( $billing_email ) : ?>
+	<p><strong><?php _e( 'Email:', 'wc-pre-orders' ); ?></strong> <?php echo $billing_email; ?></p>
 <?php endif; ?>
-<?php if ( $order->billing_phone ) : ?>
-	<p><strong><?php _e( 'Tel:', 'wc-pre-orders' ); ?></strong> <?php echo $order->billing_phone; ?></p>
+<?php if ( $billing_phone ) : ?>
+	<p><strong><?php _e( 'Tel:', 'wc-pre-orders' ); ?></strong> <?php echo $billing_phone; ?></p>
 <?php endif; ?>
 
-<?php woocommerce_get_template( 'emails/email-addresses.php', array( 'order' => $order ) ); ?>
+<?php wc_get_template( 'emails/email-addresses.php', array( 'order' => $order ) ); ?>
 
-<?php do_action( 'woocommerce_email_footer' ); ?>
+<?php do_action( 'woocommerce_email_footer', $email ); ?>

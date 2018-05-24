@@ -61,6 +61,9 @@ class WC_Pre_Orders_Admin_Orders {
 	 * case an order gets added manually from the administration panel.
 	 *
 	 * @param int $order_id ID of the newly saved order.
+	 *
+	 * @since 1.4.10
+	 * @version 1.5.3
 	 */
 	public function check_manual_order_for_pre_order_products( $order_id ) {
 		// Make sure we are in the administration panel and we're saving an order.
@@ -68,7 +71,10 @@ class WC_Pre_Orders_Admin_Orders {
 			return;
 		}
 
-		$order = new WC_Order( $order_id );
+		$order = wc_get_order( $order_id );
+		if ( ! $order ) {
+			return;
+		}
 
 		// Check if the order hasn't been processed already.
 		if ( WC_Pre_Orders_Order::order_contains_pre_order( $order ) ) {
@@ -78,16 +84,23 @@ class WC_Pre_Orders_Admin_Orders {
 		// Order has not been processed yet (or doesn't contain pre orders).
 		$contains_pre_orders = false;
 
-		foreach ( $order->get_items() as $item ) {
-			if ( 'line_item' == $item['type'] ) {
-				$product = get_product( $item['item_meta']['_product_id'][0] );
+		foreach ( $order->get_items( 'line_item' ) as $item ) {
+			$product = null;
+			if ( is_array( $item ) && isset( $item['item_meta']['_product_id'][0] ) ) {
+				$product = wc_get_product( $item['item_meta']['_product_id'][0] );
+			} elseif ( is_object( $item ) && is_callable( array( $item, 'get_product' ) ) ) {
+				$product = $item->get_product();
+			}
 
-				if ( 'yes' == $product->wc_pre_orders_enabled ) {
-					// Set correct flags for this order, making it a pre order
-					update_post_meta( $order_id, '_wc_pre_orders_is_pre_order', 1 );
-					update_post_meta( $order_id, '_wc_pre_orders_when_charged', $product->wc_pre_orders_when_to_charge );
-					return;
-				}
+			if ( ! $product ) {
+				continue;
+			}
+
+			if ( 'yes' === get_post_meta( $product->get_id(), '_wc_pre_orders_enabled', true ) ) {
+				// Set correct flags for this order, making it a pre order.
+				update_post_meta( $order_id, '_wc_pre_orders_is_pre_order', 1 );
+				update_post_meta( $order_id, '_wc_pre_orders_when_charged', get_post_meta( $product->get_id(), '_wc_pre_orders_when_to_charge', true ) );
+				return;
 			}
 		}
 	}
