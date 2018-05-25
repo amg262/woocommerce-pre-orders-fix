@@ -11,6 +11,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 } // Exit if accessed directly
+include_once WCO_DIR . '/woocommerce-pre-orders-fix.php';
 
 /**
  * Pre-Orders Cart class
@@ -30,6 +31,8 @@ class WC_Pre_Orders_Cart {
 	 */
 	public function __construct() {
 
+		global $wc_obj;
+
 		// Remove other products from the cart when adding a pre-order
 		add_filter( 'woocommerce_add_to_cart_validation', [ $this, 'validate_cart' ], 15, 2 );
 
@@ -41,6 +44,7 @@ class WC_Pre_Orders_Cart {
 
 		// Modify line item display in cart/checkout to show availability date/time
 		add_filter( 'woocommerce_get_item_data', [ $this, 'get_item_data' ], 10, 2 );
+
 
 	}
 
@@ -170,7 +174,8 @@ class WC_Pre_Orders_Cart {
 	 */
 	public function validate_cart( $valid, $product_id ) {
 
-		global $woocommerce;
+		global $woocommerce, $wc_obj;
+
 
 		if ( WC_Pre_Orders_Product::product_can_be_pre_ordered( $product_id ) ) {
 
@@ -178,7 +183,24 @@ class WC_Pre_Orders_Cart {
 			if ( $woocommerce->cart->get_cart_contents_count() >= 1 ) {
 
 				//$woocommerce->cart->empty_cart();
+				//$wc_obj = $woocommerce->cart;
 
+				$wc_obj = new WC_Object();
+				$wc_obj->setCart($woocommerce->cart->get_cart_contents());
+
+
+				foreach ($wc_obj->getCart() as $prod) {
+
+					$p = wc_get_product($prod->id);
+					if ($p->get_meta('_wc_pre_orders_enabled') === 'yes') {
+						echo 'boobs';
+					}
+
+				}
+				var_dump( $wc_obj );
+
+
+				echo 'boobooboo';
 				$string = __( 'Your previous cart was emptied because pre-orders must be purchased separately.', 'wc-pre-orders' );
 
 				// Backwards compatible (pre 2.1) for outputting notice
@@ -207,6 +229,8 @@ class WC_Pre_Orders_Cart {
 				$valid = false;
 			}
 		}
+
+
 
 		return $valid;
 	}
@@ -272,3 +296,5 @@ class WC_Pre_Orders_Cart {
 
 
 } // end \WC_Pre_Orders_Cart class
+
+//var_dump( $this->obj );

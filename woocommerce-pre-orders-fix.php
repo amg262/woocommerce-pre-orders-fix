@@ -52,7 +52,17 @@ if ( ! is_woocommerce_active() ) {
  */
 $GLOBALS['wc_pre_orders'] = new WC_Pre_Orders();
 
+global $wc_obj, $woocommerce;
+
 define( 'WC_PRE_ORDERS_VERSION', '1.5.4' );
+
+const WCO_FILE = __FILE__;
+const WCO_URL  = __DIR__ . '/woocommerce-pre-orders-fix.php';
+
+const WCO_DIR = __DIR__;
+const WCO_INC = __DIR__ . '/includes/';
+const WCO_JS  = __DIR__ . '/includes/wc-bom-admin.js';
+const WCO_CSS = __DIR__ . '/includes/wc-bom.css';
 
 /**
  * Main Plugin Class
@@ -383,3 +393,265 @@ class WC_Pre_Orders {
 		$this->logger->add( 'pre-orders', $message );
 	}
 }
+
+/**
+ * Created by PhpStorm.
+ * User: andy
+ * Date: 5/24/18
+ * Time: 5:45 PM
+ */
+class WC_Object {
+
+
+	protected static $instance = null;
+	private $cart;
+	private $products = [];
+	private $po_prods = [];
+	private $prods = [];
+	private $parent_order;
+	private $child_order;
+	private $linked_orders = [];
+	private $po_count;
+
+	/**
+	 * WC_Related_Products constructor.
+	 */
+	public function __construct() {
+
+		$this->init();
+	}
+
+	/**
+	 * WC_Related_Products constructor.
+	 */
+	public function init() {
+
+		global $wc_obj;//, $wcb_data;
+
+		add_action( 'admin_init', [ $this, 'upgrade_data' ] );
+
+		//register_activation_hook( __FILE__, [ $this, 'activate' ] );
+		//register_deactivation_hook( __FILE__, [ $this, 'activate' ] );
+		//add_filter( 'plugin_action_links', [ $this, 'plugin_links' ], 10, 5 );
+	}
+
+
+	/**
+	 * @return mixed
+	 */
+	public function getCart() {
+
+		return $this->cart;
+	}
+
+	/**
+	 * @param mixed $cart
+	 */
+	public function setCart( $cart ) {
+
+		$this->cart = $cart;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getProducts() {
+
+		return $this->products;
+	}
+
+	/**
+	 * @param array $products
+	 */
+	public function setProducts( $products ) {
+
+		$this->products = $products;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getPoProds() {
+
+		return $this->po_prods;
+	}
+
+	/**
+	 * @param array $po_prods
+	 */
+	public function setPoProds( $po_prods ) {
+
+		$this->po_prods = $po_prods;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getProds() {
+
+		return $this->prods;
+	}
+
+	/**
+	 * @param array $prods
+	 */
+	public function setProds( $prods ) {
+
+		$this->prods = $prods;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getParentOrder() {
+
+		return $this->parent_order;
+	}
+
+	/**
+	 * @param mixed $parent_order
+	 */
+	public function setParentOrder( $parent_order ) {
+
+		$this->parent_order = $parent_order;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getChildOrder() {
+
+		return $this->child_order;
+	}
+
+	/**
+	 * @param mixed $child_order
+	 */
+	public function setChildOrder( $child_order ) {
+
+		$this->child_order = $child_order;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getLinkedOrders() {
+
+		return $this->linked_orders;
+	}
+
+	/**
+	 * @param array $linked_orders
+	 */
+	public function setLinkedOrders( $linked_orders ) {
+
+		$this->linked_orders = $linked_orders;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getPoCount() {
+
+		return $this->po_count;
+	}
+
+	/**
+	 * @param mixed $po_count
+	 */
+	public function setPoCount( $po_count ) {
+
+		$this->po_count = $po_count;
+	}
+
+
+	/**
+	 *
+	 */
+	public function load_assets() {
+
+		$url  = 'assets/';
+		$url2 = 'assets/';
+
+		wp_register_script( 'bom_adm_js', plugins_url( 'includes/wc-bom-admin.js', 'woocommerce-pre-orders-fix.php' ), [ 'jquery' ] );
+		wp_enqueue_script( 'bom_adm_js' );
+		wp_register_style( 'bom_css', plugins_url( 'includes/wc-bom-admin.js', 'woocommerce-pre-orders-fix.php' ) );
+		wp_enqueue_style( 'bom_css' );
+	}
+
+	/**
+	 *
+	 */
+	public function delete_db() {
+
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . 'wc_obj';
+
+		$wpdb->query( "DROP TABLE IF EXISTS " . $table_name . "" );
+	}
+
+	/**
+	 *
+	 */
+	public function upgrade_data() {
+
+		global $wpdb, $wc_obj;
+
+
+		if ( ! get_option( 'wc_obj' ) ) {
+			add_option( 'wc_obj', [ 'init' => true, 'db' => 1 ] );
+		}
+
+		$wc_obj = get_option( 'wc_obj' );
+
+		$table_name = $wpdb->prefix . 'wc_obj';
+
+		$sql = "CREATE TABLE IF NOT EXISTS $table_name (
+					id int(11) NOT NULL AUTO_INCREMENT,
+					title varchar(255),
+					post_id int(11),
+					type varchar(255),
+					sub_ids text,
+					data text ,
+					time datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+					active tinyint(1) DEFAULT -1 NOT NULL,
+					PRIMARY KEY  (id)
+				);";
+
+		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+
+		update_option( WCB_DATA, $this->data );
+		dbDelta( $sql );
+
+
+		return true;
+
+	}
+
+	/**
+	 *
+	 */
+	public function install_data() {
+
+		global $wpdb;
+
+		$welcome_name = 'Mr. WordPress';
+		$welcome_text = 'Congratulations, you just completed the installation!';
+
+		$table_name = $wpdb->prefix . WCB_TBL;
+
+		$wpdb->insert( $table_name, [
+			'time' => current_time( 'mysql' ),
+			'name' => $welcome_name,
+			'data' => $welcome_text,
+			'url'  => 'http://cloudground.net/',
+		] );
+	}
+
+
+}
+
+
+
+
