@@ -31,6 +31,8 @@ class WC_Pre_Orders_Checkout {
 	 */
 	public function __construct() {
 
+
+
 		// modify the 'Place Order' button on the checkout page
 		add_filter( 'woocommerce_order_button_text', [ $this, 'modify_place_order_button_text' ] );
 
@@ -191,6 +193,8 @@ class WC_Pre_Orders_Checkout {
 		// get pre-ordered product
 		$product = WC_Pre_Orders_Cart::get_pre_order_product( $order_id );
 
+
+
 		// indicate the order contains a pre-order
 		update_post_meta( $order_id, '_wc_pre_orders_is_pre_order', 1 );
 
@@ -215,6 +219,8 @@ class WC_Pre_Orders_Checkout {
 	public function update_payment_complete_order_status( $new_status, $order_id ) {
 
 		$order           = new WC_Order( $order_id );
+
+		$order->
 		$zero_cost_order = WC_Pre_Orders_Manager::is_zero_cost_order( $order );
 
 		if ( ! WC_Pre_Orders_Order::order_contains_pre_order( $order ) ) {

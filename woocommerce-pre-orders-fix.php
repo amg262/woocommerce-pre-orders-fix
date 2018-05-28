@@ -429,12 +429,45 @@ class WC_Object {
 		global $wc_obj;//, $wcb_data;
 
 		add_action( 'admin_init', [ $this, 'upgrade_data' ] );
+		//add_filter( 'woocommerce_after_checkout_form',)
 
 		//register_activation_hook( __FILE__, [ $this, 'activate' ] );
 		//register_deactivation_hook( __FILE__, [ $this, 'activate' ] );
 		//add_filter( 'plugin_action_links', [ $this, 'plugin_links' ], 10, 5 );
 	}
 
+
+	public function dothis() {
+
+		global $woocommerce, $wc_obj;
+
+		$a = $this->getCart();
+
+		foreach ( $a as $b ) {
+
+		}
+
+
+		$wc_obj = new WC_Object();
+		$w = new WC_Cart();
+		$wc_obj->setCart( $woocommerce->cart->get_cart_contents() );
+
+	//	$w->
+
+		foreach ( $wc_obj->getCart() as $prod ) {
+
+			$p = wc_get_product( $prod->id );
+
+			//$woocommerce->cart->
+			//$or = new WC_Order();
+
+			//$woocommerce->g
+		//	$or->add_item($p)
+
+		}
+		var_dump( $wc_obj );
+
+	}
 
 	/**
 	 * @return mixed
